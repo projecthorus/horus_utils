@@ -1,0 +1,36 @@
+#
+# Example configuration file for the OziPlotter Input Multiplexer Utility
+#
+# Create a copy of this file as ozimux.cfg and edit as appropriate.
+#
+
+# Global Settings
+[Global]
+# Where do we output telemetry messages to
+oziplotter_host = 127.0.0.1
+oziplotter_port = 8942
+
+# How many inputs do we have
+number_of_inputs = 4
+
+# Input definitions.
+# Note that the enabled flag indicates the INITIAL state, which may be changed during runtime.
+[Input_0]
+input_name = Horus Ground Station (LoRa)
+input_port = 55680
+enabled = True
+
+[Input_1]
+input_name = Fldigi Bridge
+input_port = 55683
+enabled = False
+
+[Input_2]
+input_name = Radiosonde Auto RX
+input_port = 55681
+enabled = False
+
+[Input_3]
+input_name = SondeMonitor
+input_port = 55682
+enabled = False

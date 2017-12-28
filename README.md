@@ -1,2 +1,3 @@
-# horus_utils
-Ground Station &amp; Chase Car Utilities for High-Altitude Balloon Tracking
+Project Horus - Ground Station & Chase Car Utilities for High Altitude Balloon Tracking
+=======================================================================================
+
