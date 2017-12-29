@@ -48,7 +48,7 @@ uploadEnabled.setChecked(True)
 
 # Create and Lay-out window
 win = QtGui.QWidget()
-win.resize(500,100)
+win.resize(350,100)
 win.show()
 win.setWindowTitle("ChaseTracker - %s" % callsign)
 layout = QtGui.QGridLayout()

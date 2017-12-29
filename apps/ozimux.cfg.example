@@ -31,6 +31,6 @@ input_port = 55681
 enabled = False
 
 [Input_3]
-input_name = SondeMonitor
+input_name = Spare
 input_port = 55682
 enabled = False

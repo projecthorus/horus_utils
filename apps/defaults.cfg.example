@@ -26,10 +26,11 @@ payload_callsign = HORUSLORA
 # Where OziPlotter (or OziMux) is running.
 # Note: OziPlotter listens on UDP port 8942, OziMux's default input port for LoRa data is 55680
 oziplotter_host = 127.0.0.1
-oziplotter_port = 8942
+oziplotter_port = 55680
 
 # Enable emission of a payload summary packet on receipt of a telemetry frame
-enable_payload_summary = True
+# This should be set to True if not using OziMux to handle telemetry selection.
+enable_payload_summary = False
 
 # This section is used by ChaseTracker and ChaseTracker_NoGUI
 [GPS]
