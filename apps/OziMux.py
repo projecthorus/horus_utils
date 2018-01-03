@@ -14,7 +14,7 @@ import traceback
 import logging
 import Queue
 from threading import Thread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from horuslib import *
 from horuslib.packets import *
 
@@ -213,29 +213,29 @@ def read_config(filename="ozimux.cfg"):
 
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 #
 # Create and Lay-out window
 #
-main_widget = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+main_widget = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 main_widget.setLayout(layout)
 # Create Widgets
 
 data_font_size = 18
 
-input1Frame = QtGui.QFrame()
+input1Frame = QtWidgets.QFrame()
 input1Frame.setFixedSize(400,90)
-input1Frame.setFrameStyle(QtGui.QFrame.Box)
+input1Frame.setFrameStyle(QtWidgets.QFrame.Box)
 input1Frame.setLineWidth(2)
-input1Selected = QtGui.QCheckBox("Selected")
-input1Title = QtGui.QLabel("<b><u>Not Active</u></b>")
-input1Data = QtGui.QLabel("???.?????, ???.?????, ?????")
+input1Selected = QtWidgets.QCheckBox("Selected")
+input1Title = QtWidgets.QLabel("<b><u>Not Active</u></b>")
+input1Data = QtWidgets.QLabel("???.?????, ???.?????, ?????")
 input1Data.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-input1DataAge = QtGui.QLabel("No Data Yet...")
+input1DataAge = QtWidgets.QLabel("No Data Yet...")
 
-input1Layout = QtGui.QGridLayout()
+input1Layout = QtWidgets.QGridLayout()
 input1Layout.addWidget(input1Selected,0,1,1,1)
 input1Layout.addWidget(input1Title,0,0)
 input1Layout.addWidget(input1Data,1,0,1,2)
@@ -243,51 +243,51 @@ input1Layout.addWidget(input1DataAge,2,0,1,2)
 input1Frame.setLayout(input1Layout)
 
 
-input2Frame = QtGui.QFrame()
+input2Frame = QtWidgets.QFrame()
 input2Frame.setFixedSize(400,90)
-input2Frame.setFrameStyle(QtGui.QFrame.Box)
+input2Frame.setFrameStyle(QtWidgets.QFrame.Box)
 input2Frame.setLineWidth(2)
-input2Selected = QtGui.QCheckBox("Selected")
-input2Title = QtGui.QLabel("<b><u>Not Active</u></b>")
-input2Data = QtGui.QLabel("???.?????, ???.?????, ?????")
+input2Selected = QtWidgets.QCheckBox("Selected")
+input2Title = QtWidgets.QLabel("<b><u>Not Active</u></b>")
+input2Data = QtWidgets.QLabel("???.?????, ???.?????, ?????")
 input2Data.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-input2DataAge = QtGui.QLabel("No Data Yet...")
+input2DataAge = QtWidgets.QLabel("No Data Yet...")
 
-input2Layout = QtGui.QGridLayout()
+input2Layout = QtWidgets.QGridLayout()
 input2Layout.addWidget(input2Selected,0,1,1,1)
 input2Layout.addWidget(input2Title,0,0)
 input2Layout.addWidget(input2Data,1,0,1,2)
 input2Layout.addWidget(input2DataAge,2,0,1,2)
 input2Frame.setLayout(input2Layout)
 
-input3Frame = QtGui.QFrame()
+input3Frame = QtWidgets.QFrame()
 input3Frame.setFixedSize(400,90)
-input3Frame.setFrameStyle(QtGui.QFrame.Box)
+input3Frame.setFrameStyle(QtWidgets.QFrame.Box)
 input3Frame.setLineWidth(2)
-input3Selected = QtGui.QCheckBox("Selected")
-input3Title = QtGui.QLabel("<b><u>Not Active</u></b>")
-input3Data = QtGui.QLabel("???.?????, ???.?????, ?????")
+input3Selected = QtWidgets.QCheckBox("Selected")
+input3Title = QtWidgets.QLabel("<b><u>Not Active</u></b>")
+input3Data = QtWidgets.QLabel("???.?????, ???.?????, ?????")
 input3Data.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-input3DataAge = QtGui.QLabel("No Data Yet...")
+input3DataAge = QtWidgets.QLabel("No Data Yet...")
 
-input3Layout = QtGui.QGridLayout()
+input3Layout = QtWidgets.QGridLayout()
 input3Layout.addWidget(input3Selected,0,1,1,1)
 input3Layout.addWidget(input3Title,0,0)
 input3Layout.addWidget(input3Data,1,0,1,2)
 input3Layout.addWidget(input3DataAge,2,0,1,2)
 input3Frame.setLayout(input3Layout)
 
-input4Frame = QtGui.QFrame()
+input4Frame = QtWidgets.QFrame()
 input4Frame.setFixedSize(400,90)
-input4Frame.setFrameStyle(QtGui.QFrame.Box)
+input4Frame.setFrameStyle(QtWidgets.QFrame.Box)
 input4Frame.setLineWidth(2)
-input4Selected = QtGui.QCheckBox("Selected")
-input4Title = QtGui.QLabel("<b><u>Not Active</u></b>")
-input4Data = QtGui.QLabel("???.?????, ???.?????, ?????")
+input4Selected = QtWidgets.QCheckBox("Selected")
+input4Title = QtWidgets.QLabel("<b><u>Not Active</u></b>")
+input4Data = QtWidgets.QLabel("???.?????, ???.?????, ?????")
 input4Data.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-input4DataAge = QtGui.QLabel("No Data Yet...")
+input4DataAge = QtWidgets.QLabel("No Data Yet...")
 
-input4Layout = QtGui.QGridLayout()
+input4Layout = QtWidgets.QGridLayout()
 input4Layout.addWidget(input4Selected,0,1,1,1)
 input4Layout.addWidget(input4Title,0,0)
 input4Layout.addWidget(input4Data,1,0,1,2)
@@ -295,14 +295,14 @@ input4Layout.addWidget(input4DataAge,2,0,1,2)
 input4Frame.setLayout(input4Layout)
 
 # Exclusive CheckBox group
-inputSelector = QtGui.QButtonGroup()
+inputSelector = QtWidgets.QButtonGroup()
 inputSelector.addButton(input1Selected,0)
 inputSelector.addButton(input2Selected,1)
 inputSelector.addButton(input3Selected,2)
 inputSelector.addButton(input4Selected,3)
 inputSelector.setExclusive(True)
 
-enableSummaryOutput = QtGui.QCheckBox("Enable Payload Summary Output")
+enableSummaryOutput = QtWidgets.QCheckBox("Enable Payload Summary Output")
 enableSummaryOutput.setChecked(True)
 
 # Indexed access to widgets.
@@ -319,7 +319,7 @@ layout.addWidget(input3Frame)
 layout.addWidget(input4Frame)
 layout.addWidget(enableSummaryOutput)
 
-mainwin = QtGui.QMainWindow()
+mainwin = QtWidgets.QMainWindow()
 
 # Finalise and show the window
 mainwin.setWindowTitle("OziPlotter Input Mux")
@@ -430,7 +430,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         # If we get here, we've closed the window. Close all threads.
         for _obj in listener_objects:
             _obj.close()

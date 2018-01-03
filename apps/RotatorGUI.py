@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# -*- coding: UTF-8 -*-
 #
 #   Project Horus 
 #   Rotator Control GUI
@@ -20,7 +21,7 @@ from horuslib.packets import *
 from horuslib.earthmaths import *
 from horuslib.rotators import PSTRotator, ROTCTLD
 from threading import Thread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from datetime import datetime
 import socket,json,sys,Queue,traceback,time,math,ConfigParser,logging
 
@@ -65,35 +66,35 @@ MY_DATA_AGE = 0.0
 rotator = None
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 #
 # Create and Lay-out window
 #
-main_widget = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+main_widget = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 main_widget.setLayout(layout)
 # Create Widgets
 data_font_size = 18
 
 # FRAME 1 - My Location
-myDataFrame = QtGui.QFrame()
-myDataFrame.setFrameStyle(QtGui.QFrame.Box)
+myDataFrame = QtWidgets.QFrame()
+myDataFrame.setFrameStyle(QtWidgets.QFrame.Box)
 
-myDataLabel = QtGui.QLabel("<b><u>My Location</u><b>")
-myLatitudeLabel = QtGui.QLabel("<b>Latitude</b>")
-myDataLatitudeValue = QtGui.QLabel("???.?????")
+myDataLabel = QtWidgets.QLabel("<b><u>My Location</u><b>")
+myLatitudeLabel = QtWidgets.QLabel("<b>Latitude</b>")
+myDataLatitudeValue = QtWidgets.QLabel("???.?????")
 myDataLatitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-myLongitudeLabel = QtGui.QLabel("<b>Longitude</b>")
-myDataLongitudeValue = QtGui.QLabel("???.?????")
+myLongitudeLabel = QtWidgets.QLabel("<b>Longitude</b>")
+myDataLongitudeValue = QtWidgets.QLabel("???.?????")
 myDataLongitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-myAltitudeLabel = QtGui.QLabel("<b>Altitude</b>")
-myDataAltitudeValue = QtGui.QLabel("????m")
+myAltitudeLabel = QtWidgets.QLabel("<b>Altitude</b>")
+myDataAltitudeValue = QtWidgets.QLabel("????m")
 myDataAltitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-myDataFixLocation = QtGui.QCheckBox("Lock Location")
-myDataStatus = QtGui.QLabel("No Data Yet.")
+myDataFixLocation = QtWidgets.QCheckBox("Lock Location")
+myDataStatus = QtWidgets.QLabel("No Data Yet.")
 
-myDataLayout = QtGui.QGridLayout()
+myDataLayout = QtWidgets.QGridLayout()
 myDataLayout.addWidget(myDataLabel,0,0)
 myDataLayout.addWidget(myDataFixLocation,0,2)
 myDataLayout.addWidget(myLatitudeLabel,1,0)
@@ -107,22 +108,22 @@ myDataFrame.setLayout(myDataLayout)
 
 
 # FRAME 2 - Payload Location
-payloadDataFrame = QtGui.QFrame()
-payloadDataFrame.setFrameStyle(QtGui.QFrame.Box)
+payloadDataFrame = QtWidgets.QFrame()
+payloadDataFrame.setFrameStyle(QtWidgets.QFrame.Box)
 
-payloadDataLabel = QtGui.QLabel("<b><u>Payload Location</u><b>")
-payloadLatitudeLabel = QtGui.QLabel("<b>Latitude</b>")
-payloadLongitudeLabel = QtGui.QLabel("<b>Longitude</b>")
-payloadAltitudeLabel = QtGui.QLabel("<b>Altitude</b>")
-payloadDataLatitudeValue = QtGui.QLabel("???.?????")
+payloadDataLabel = QtWidgets.QLabel("<b><u>Payload Location</u><b>")
+payloadLatitudeLabel = QtWidgets.QLabel("<b>Latitude</b>")
+payloadLongitudeLabel = QtWidgets.QLabel("<b>Longitude</b>")
+payloadAltitudeLabel = QtWidgets.QLabel("<b>Altitude</b>")
+payloadDataLatitudeValue = QtWidgets.QLabel("???.?????")
 payloadDataLatitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-payloadDataLongitudeValue = QtGui.QLabel("???.?????")
+payloadDataLongitudeValue = QtWidgets.QLabel("???.?????")
 payloadDataLongitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-payloadDataAltitudeValue = QtGui.QLabel("????m")
+payloadDataAltitudeValue = QtWidgets.QLabel("????m")
 payloadDataAltitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-payloadDataStatus = QtGui.QLabel("No Data Yet.")
+payloadDataStatus = QtWidgets.QLabel("No Data Yet.")
 
-payloadDataLayout = QtGui.QGridLayout()
+payloadDataLayout = QtWidgets.QGridLayout()
 payloadDataLayout.addWidget(payloadDataLabel,0,0)
 payloadDataLayout.addWidget(payloadLatitudeLabel,1,0)
 payloadDataLayout.addWidget(payloadLongitudeLabel,1,1)
@@ -134,22 +135,22 @@ payloadDataLayout.addWidget(payloadDataStatus,3,0,1,3)
 payloadDataFrame.setLayout(payloadDataLayout)
 
 # FRAME 3 - Calculated Info
-calculatedDataFrame = QtGui.QFrame()
-calculatedDataFrame.setFrameStyle(QtGui.QFrame.Box)
+calculatedDataFrame = QtWidgets.QFrame()
+calculatedDataFrame.setFrameStyle(QtWidgets.QFrame.Box)
 
-calculatedDataLabel = QtGui.QLabel("<b><u>Calculated Data</u><b>")
-azimuthLabel = QtGui.QLabel("<b>Azimuth</b>")
-azimuthValue = QtGui.QLabel("<b>NNE(000.0\260)</b>")
+calculatedDataLabel = QtWidgets.QLabel("<b><u>Calculated Data</u><b>")
+azimuthLabel = QtWidgets.QLabel("<b>Azimuth</b>")
+azimuthValue = QtWidgets.QLabel("<b>NNE(000.0°)</b>")
 azimuthValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-elevationLabel = QtGui.QLabel("<b>Elev</b>")
-elevationValue = QtGui.QLabel("<b>00.0\260</b>")
+elevationLabel = QtWidgets.QLabel("<b>Elev</b>")
+elevationValue = QtWidgets.QLabel("<b>00.0°</b>")
 elevationValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-rangeLabel = QtGui.QLabel("<b>Range</b>")
-rangeValue = QtGui.QLabel("<b>0000m</b>")
+rangeLabel = QtWidgets.QLabel("<b>Range</b>")
+rangeValue = QtWidgets.QLabel("<b>0000m</b>")
 rangeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-rotatorEnableButton = QtGui.QPushButton("Enable")
+rotatorEnableButton = QtWidgets.QPushButton("Enable")
 
-calculatedDataLayout = QtGui.QGridLayout()
+calculatedDataLayout = QtWidgets.QGridLayout()
 calculatedDataLayout.addWidget(calculatedDataLabel,0,0,1,1)
 calculatedDataLayout.addWidget(azimuthLabel,1,0)
 calculatedDataLayout.addWidget(elevationLabel,1,1)
@@ -160,24 +161,24 @@ calculatedDataLayout.addWidget(rangeValue,2,2)
 calculatedDataFrame.setLayout(calculatedDataLayout)
 
 # FRAME 4 - Rotator Control
-rotatorFrame = QtGui.QFrame()
-rotatorFrame.setFrameStyle(QtGui.QFrame.Box)
+rotatorFrame = QtWidgets.QFrame()
+rotatorFrame.setFrameStyle(QtWidgets.QFrame.Box)
 
-rotatorLabel = QtGui.QLabel("<b><u>Rotator Control</u><b>")
-rotatorConnectButton = QtGui.QPushButton("Connect")
-rotatorHomeButton = QtGui.QPushButton("Park")
-rotatorHoldButton = QtGui.QPushButton("Hold")
+rotatorLabel = QtWidgets.QLabel("<b><u>Rotator Control</u><b>")
+rotatorConnectButton = QtWidgets.QPushButton("Connect")
+rotatorHomeButton = QtWidgets.QPushButton("Park")
+rotatorHoldButton = QtWidgets.QPushButton("Hold")
 rotatorHoldButton.setCheckable(True)
 rotatorHoldButton.setChecked(True)
-rotatorCurrentLabel = QtGui.QLabel("<b>Current Position:<b>")
-rotatorCurrentValue = QtGui.QLabel("Az: ---.-\260  Elev: --.-\260")
+rotatorCurrentLabel = QtWidgets.QLabel("<b>Current Position:<b>")
+rotatorCurrentValue = QtWidgets.QLabel("Az: ---.-°  Elev: --.-°")
 rotatorCurrentValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-rotatorCommandedLabel = QtGui.QLabel("<b>Commanded Position:<b>")
-rotatorCommandedValue = QtGui.QLabel("Az: ---.-\260  Elev: --.-\260")
+rotatorCommandedLabel = QtWidgets.QLabel("<b>Commanded Position:<b>")
+rotatorCommandedValue = QtWidgets.QLabel("Az: ---.-°  Elev: --.-°")
 rotatorCommandedValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-rotatorStatusLabel = QtGui.QLabel("Not Connected")
+rotatorStatusLabel = QtWidgets.QLabel("Not Connected")
 
-rotatorLayout = QtGui.QGridLayout()
+rotatorLayout = QtWidgets.QGridLayout()
 rotatorLayout.addWidget(rotatorLabel,0,0)
 rotatorLayout.addWidget(rotatorConnectButton,1,0)
 rotatorLayout.addWidget(rotatorHomeButton,1,1)
@@ -197,12 +198,12 @@ layout.addWidget(calculatedDataFrame,2,0)
 layout.addWidget(rotatorFrame,3,0)
 
 
-mainwin = QtGui.QMainWindow()
+mainwin = QtWidgets.QMainWindow()
 # Add Menu Options
-exitAction = QtGui.QAction('&Exit', mainwin)        
+exitAction = QtWidgets.QAction('&Exit', mainwin)        
 exitAction.setShortcut('Ctrl+Q')
 exitAction.setStatusTip('Exit application')
-exitAction.triggered.connect(QtGui.qApp.quit)
+exitAction.triggered.connect(QtWidgets.qApp.quit)
 
 
 
@@ -265,7 +266,7 @@ def rotator_update():
     if PAYLOAD_DATA_VALID and MY_DATA_VALID:
         response = rotator.set_azel(PAYLOAD_AZIMUTH, PAYLOAD_ELEVATION)
         if response:
-            rotatorCommandedValue.setText("Az: %3.1f\260  Elev: %2.1f\260" % (PAYLOAD_AZIMUTH, PAYLOAD_ELEVATION))
+            rotatorCommandedValue.setText("Az: %3.1f°  Elev: %2.1f°" % (PAYLOAD_AZIMUTH, PAYLOAD_ELEVATION))
         else:
             rotatorCommandedValue.setText("Comms Fault!")
     else:
@@ -278,7 +279,7 @@ def park_rotator():
     if rotator != None:
         response = rotator.set_azel(0.0, 0.0)
         if response:
-            rotatorCommandedValue.setText("Az: %3.1f\260  Elev: %2.1f\260" % (0.0, 0.0))
+            rotatorCommandedValue.setText("Az: %3.1f°  Elev: %2.1f°" % (0.0, 0.0))
             rotatorHoldButton.setChecked(True)
         else:
             rotatorCommandedValue.setText("Comms Fault!")
@@ -294,9 +295,9 @@ def poll_rotator():
         try:
             (_az,_el) = rotator.get_azel()
             if (_az == None) or (_el == None):
-                rotatorCurrentValue.setText("Az: ???.?\260  Elev: ??.?\260")
+                rotatorCurrentValue.setText("Az: ???.?°  Elev: ??.?°")
             else:
-                rotatorCurrentValue.setText("Az: %3.1f\260  Elev: %2.1f\260" % (_az,_el))
+                rotatorCurrentValue.setText("Az: %3.1f°  Elev: %2.1f°" % (_az,_el))
         except:
             rotatorCurrentValue.setText("Comms Fault!")
 
@@ -310,7 +311,7 @@ def override_location():
     global MY_LATITUDE, MY_LONGITUDE, MY_ALTITUDE, MY_DATA_VALID, MY_DATA_AGE
     global myDataLatitudeValue, myDataLongitudeLabel, myDataLatitudeValue, myDataFixLocation
 
-    text, ok = QtGui.QInputDialog.getText(main_widget,'Set Manual Location', 'New Location: lat,lon,alt ')
+    text, ok = QtWidgets.QInputDialog.getText(main_widget,'Set Manual Location', 'New Location: lat,lon,alt ')
 
     if ok:
         try:
@@ -335,13 +336,13 @@ def override_location():
 
         except:
             logging.error("Invalid manual location entered.")
-            _msgBox = QtGui.QMessageBox()
+            _msgBox = QtWidgets.QMessageBox()
             _msgBox.setText("Invalid entry format!")
             _msgBox.exec_()
 
 
 # Add menu option.
-myPosOverrideAction = QtGui.QAction('&My Position', mainwin)
+myPosOverrideAction = QtWidgets.QAction('&My Position', mainwin)
 myPosOverrideAction.setShortcut('Ctrl+M')
 myPosOverrideAction.setStatusTip('Set My Latitude, Longitude, and Altitude Manually')
 myPosOverrideAction.triggered.connect(override_location)
@@ -353,7 +354,7 @@ def override_payload_position():
     global PAYLOAD_LATITUDE, PAYLOAD_LONGITUDE, PAYLOAD_ALTITUDE, PAYLOAD_DATA_VALID, PAYLOAD_DATA_AGE
     global payloadDataLatitudeValue, payloadDataLongitudeValue, payloadDataAltitudeValue, rotatorHoldButton
 
-    text, ok = QtGui.QInputDialog.getText(main_widget,'Set Manual Payload Position', 'New Position: lat,lon,alt ')
+    text, ok = QtWidgets.QInputDialog.getText(main_widget,'Set Manual Payload Position', 'New Position: lat,lon,alt ')
 
     if ok:
         try:
@@ -378,13 +379,13 @@ def override_payload_position():
 
         except:
             logging.error("Invalid manual location entered.")
-            _msgBox = QtGui.QMessageBox()
+            _msgBox = QtWidgets.QMessageBox()
             _msgBox.setText("Invalid entry format!")
             _msgBox.exec_()
 
 
 # Add menu option.
-payloadPosOverrideAction = QtGui.QAction('&Payload Position', mainwin)
+payloadPosOverrideAction = QtWidgets.QAction('&Payload Position', mainwin)
 payloadPosOverrideAction.setShortcut('Ctrl+P')
 payloadPosOverrideAction.setStatusTip('Set Payload Latitude, Longitude, and Altitude Manually')
 payloadPosOverrideAction.triggered.connect(override_payload_position)
@@ -395,7 +396,7 @@ def override_azel():
     """ Allow user to set a manual azimuth and elevation """
     global azimuthValue, elevationValue, rotatorHoldButton
     global PAYLOAD_AZIMUTH, PAYLOAD_ELEVATION, PAYLOAD_DATA_VALID
-    text, ok = QtGui.QInputDialog.getText(main_widget,'Set Manual Azimuth and Elevation', 'New Position: azimuth,elevation')
+    text, ok = QtWidgets.QInputDialog.getText(main_widget,'Set Manual Azimuth and Elevation', 'New Position: azimuth,elevation')
 
     if ok:
         try:
@@ -414,13 +415,13 @@ def override_azel():
 
         except:
             logging.error("Invalid manual position entered.")
-            _msgBox = QtGui.QMessageBox()
+            _msgBox = QtWidgets.QMessageBox()
             _msgBox.setText("Invalid entry format!")
             _msgBox.exec_()
 
 
 # Add menu option.
-rotatorOverrideAction = QtGui.QAction('&Rotator Position', mainwin)
+rotatorOverrideAction = QtWidgets.QAction('&Rotator Position', mainwin)
 rotatorOverrideAction.setShortcut('Ctrl+R')
 rotatorOverrideAction.setStatusTip('Set Rotator Azimuth/Elevation Manually')
 rotatorOverrideAction.triggered.connect(override_azel)
@@ -449,8 +450,8 @@ def calculate_az_el_range():
     cardinal_direction = bearing_to_cardinal(PAYLOAD_AZIMUTH)
 
     # Set display values.
-    azimuthValue.setText("%3s(%3.1f\260)" % (cardinal_direction,PAYLOAD_AZIMUTH))
-    elevationValue.setText("%2.1f\260" % PAYLOAD_ELEVATION)
+    azimuthValue.setText("%3s(%3.1f°)" % (cardinal_direction,PAYLOAD_AZIMUTH))
+    elevationValue.setText("%2.1f°" % PAYLOAD_ELEVATION)
     # Display range in km if >1km, in metres otherwise.
     if range_val >= 1000.0:
         rangeValue.setText("%3.1fkm" % (range_val/1000.0))
@@ -580,6 +581,6 @@ if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         t = Thread(target=udp_rx_thread)
         t.start()
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         udp_listener_running = False
         rotator.close()

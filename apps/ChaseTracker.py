@@ -8,7 +8,7 @@ from threading import Thread
 from base64 import b64encode
 from hashlib import sha256
 from datetime import datetime
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 from horuslib import *
 
 # Attempt to read in config file
@@ -33,25 +33,25 @@ alt = 0
 speed = 0 # m/s
 
 # GUI Initialisation
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
-currentPositionLabel = QtGui.QLabel("")
+currentPositionLabel = QtWidgets.QLabel("")
 
-gpsStatusLabel = QtGui.QLabel("No Data Yet...")
+gpsStatusLabel = QtWidgets.QLabel("No Data Yet...")
 gpsStatusLabel.setWordWrap(True)
 
-habitatStatusLabel = QtGui.QLabel("No Data Yet...")
+habitatStatusLabel = QtWidgets.QLabel("No Data Yet...")
 habitatStatusLabel.setWordWrap(True)
 
-uploadEnabled = QtGui.QCheckBox("Enable Upload")
+uploadEnabled = QtWidgets.QCheckBox("Enable Upload")
 uploadEnabled.setChecked(True)
 
 # Create and Lay-out window
-win = QtGui.QWidget()
+win = QtWidgets.QWidget()
 win.resize(350,100)
 win.show()
 win.setWindowTitle("ChaseTracker - %s" % callsign)
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 win.setLayout(layout)
 # Add Widgets
 layout.addWidget(currentPositionLabel,0,0,1,1)
@@ -301,5 +301,5 @@ t.start()
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         serial_running = False

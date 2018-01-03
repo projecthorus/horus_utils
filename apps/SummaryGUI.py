@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# -*- coding: UTF-8 -*-
 #
 #   Project Horus 
 #   Payload Summary GUI
@@ -10,7 +11,7 @@ from horuslib import *
 from horuslib.packets import *
 from horuslib.earthmaths import *
 from threading import Thread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from datetime import datetime
 import socket,json,sys,Queue,traceback,time,math
 
@@ -40,35 +41,35 @@ car_data_age = 0
 
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 #
 # Create and Lay-out window
 #
-main_widget = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+main_widget = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 main_widget.setLayout(layout)
 # Create Widgets
 data_font_size = 18
-altitudeLabel = QtGui.QLabel("<b>Alt</b>")
-altitudeValue = QtGui.QLabel("<b>00000m</b>")
+altitudeLabel = QtWidgets.QLabel("<b>Alt</b>")
+altitudeValue = QtWidgets.QLabel("<b>00000m</b>")
 altitudeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-speedLabel = QtGui.QLabel("<b>Speed</b>")
-speedValue = QtGui.QLabel("<b>000kph</b>")
+speedLabel = QtWidgets.QLabel("<b>Speed</b>")
+speedValue = QtWidgets.QLabel("<b>000kph</b>")
 speedValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-ascrateLabel = QtGui.QLabel("<b>Asc</b>")
-ascrateValue = QtGui.QLabel("<b>-00.0m/s</b>")
+ascrateLabel = QtWidgets.QLabel("<b>Asc</b>")
+ascrateValue = QtWidgets.QLabel("<b>-00.0m/s</b>")
 ascrateValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-azimuthLabel = QtGui.QLabel("<b>Az</b>")
-azimuthValue = QtGui.QLabel("<b>NNE(000\260)</b>")
+azimuthLabel = QtWidgets.QLabel("<b>Az</b>")
+azimuthValue = QtWidgets.QLabel("<b>NNE(000°)</b>")
 azimuthValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-elevationLabel = QtGui.QLabel("<b>Elev</b>")
-elevationValue = QtGui.QLabel("<b>00\260</b>")
+elevationLabel = QtWidgets.QLabel("<b>Elev</b>")
+elevationValue = QtWidgets.QLabel("<b>00°</b>")
 elevationValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-rangeLabel = QtGui.QLabel("<b>Range</b>")
-rangeValue = QtGui.QLabel("<b>0000m</b>")
+rangeLabel = QtWidgets.QLabel("<b>Range</b>")
+rangeValue = QtWidgets.QLabel("<b>0000m</b>")
 rangeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-statusLabel = QtGui.QLabel("Payload Data Age: %0.1fs \t GPS Data Age: %0.1fs" % (payload_data_age,car_data_age))
+statusLabel = QtWidgets.QLabel("Payload Data Age: %0.1fs \t GPS Data Age: %0.1fs" % (payload_data_age,car_data_age))
 
 # Lay Out Widgets
 layout.addWidget(altitudeLabel,0,0)
@@ -86,7 +87,7 @@ layout.addWidget(rangeValue,1,5)
 layout.addWidget(statusLabel,2,0,1,6)
 
 
-mainwin = QtGui.QMainWindow()
+mainwin = QtWidgets.QMainWindow()
 mainwin.setWindowFlags(mainwin.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
 
 # Finalise and show the window
@@ -122,8 +123,8 @@ def calculate_az_el_range():
     cardinal_direction = bearing_to_cardinal(azimuth)
 
     # Set display values.
-    azimuthValue.setText("%3s(%3d\260)" % (cardinal_direction,int(azimuth)))
-    elevationValue.setText("%2d\260" % int(elevation))
+    azimuthValue.setText("%3s(%3d°)" % (cardinal_direction,int(azimuth)))
+    elevationValue.setText("%2d°" % int(elevation))
     # Display range in km if >1km, in metres otherwise.
     if range_val >= 1000.0:
         rangeValue.setText("%3.1fkm" % (range_val/1000.0))
@@ -269,5 +270,5 @@ if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         t = Thread(target=udp_rx_thread)
         t.start()
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         udp_listener_running = False

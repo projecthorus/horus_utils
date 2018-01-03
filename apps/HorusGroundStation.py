@@ -9,7 +9,7 @@ from horuslib import *
 from horuslib.packets import *
 from horuslib.oziplotter import *
 from threading import Thread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 from datetime import datetime
 import socket,json,sys,Queue,random,os,math,traceback,random
 import ConfigParser
@@ -28,7 +28,7 @@ rxqueue = Queue.Queue(RX_QUEUE_SIZE)
 txed_packets = []
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 # Last Packet Counter
 timer_update_rate = 0.1 # Seconds
@@ -61,33 +61,33 @@ oziplotter_host = "127.0.0.1"
 
 # PACKET SNIFFER WIDGET
 # Displays a running log of all UDP traffic.
-packetSnifferFrame = QtGui.QFrame()
+packetSnifferFrame = QtWidgets.QFrame()
 packetSnifferFrame.setFixedSize(800,190)
-packetSnifferFrame.setFrameStyle(QtGui.QFrame.Box)
-console = QtGui.QPlainTextEdit()
+packetSnifferFrame.setFrameStyle(QtWidgets.QFrame.Box)
+console = QtWidgets.QPlainTextEdit()
 console.setReadOnly(True)
-consoleInhibitStatus = QtGui.QCheckBox("Inhibit Status Messages")
+consoleInhibitStatus = QtWidgets.QCheckBox("Inhibit Status Messages")
 consoleInhibitStatus.setChecked(False)
-packetSnifferLayout = QtGui.QGridLayout()
+packetSnifferLayout = QtWidgets.QGridLayout()
 packetSnifferLayout.addWidget(consoleInhibitStatus,0,0)
 packetSnifferLayout.addWidget(console,1,0)
 packetSnifferFrame.setLayout(packetSnifferLayout)
 
 # PAYLOAD SELECTION WIDGET
-payloadSelectionFrame = QtGui.QFrame()
+payloadSelectionFrame = QtWidgets.QFrame()
 payloadSelectionFrame.setFixedSize(150,220)
-payloadSelectionFrame.setFrameStyle(QtGui.QFrame.Box)
+payloadSelectionFrame.setFrameStyle(QtWidgets.QFrame.Box)
 payloadSelectionFrame.setLineWidth(2)
-payloadSelectionTitle = QtGui.QLabel("<b><u>Payload ID</u></b>")
-payloadSelectionLabel = QtGui.QLabel("<b>Current:</b>")
-payloadSelectionValue = QtGui.QLabel("%d" % current_payload)
-payloadSelectionListLabel = QtGui.QLabel("<b>Heard Payloads:</b>")
-payloadSelectionList = QtGui.QListWidget()
-myCallsignLabel = QtGui.QLabel("<b><u>My Callsign</u></b>")
-myCallsignValue = QtGui.QLineEdit("N0CALL")
+payloadSelectionTitle = QtWidgets.QLabel("<b><u>Payload ID</u></b>")
+payloadSelectionLabel = QtWidgets.QLabel("<b>Current:</b>")
+payloadSelectionValue = QtWidgets.QLabel("%d" % current_payload)
+payloadSelectionListLabel = QtWidgets.QLabel("<b>Heard Payloads:</b>")
+payloadSelectionList = QtWidgets.QListWidget()
+myCallsignLabel = QtWidgets.QLabel("<b><u>My Callsign</u></b>")
+myCallsignValue = QtWidgets.QLineEdit("N0CALL")
 myCallsignValue.setMaxLength(9)
 
-payloadSelectionLayout = QtGui.QGridLayout()
+payloadSelectionLayout = QtWidgets.QGridLayout()
 payloadSelectionLayout.addWidget(payloadSelectionTitle,0,0,1,2)
 payloadSelectionLayout.addWidget(payloadSelectionLabel,1,0,1,1)
 payloadSelectionLayout.addWidget(payloadSelectionValue,1,1,1,1)
@@ -107,26 +107,26 @@ payloadSelectionList.currentItemChanged.connect(newSelectedPayload)
 
 # LAST PACKET DATA WIDGET
 # Displays RSSI and SNR of the last Received Packet.
-lastPacketFrame = QtGui.QFrame()
+lastPacketFrame = QtWidgets.QFrame()
 lastPacketFrame.setFixedSize(220,220)
-lastPacketFrame.setFrameStyle(QtGui.QFrame.Box)
+lastPacketFrame.setFrameStyle(QtWidgets.QFrame.Box)
 lastPacketFrame.setLineWidth(2)
-lastPacketTitle = QtGui.QLabel("<b><u>Last Packet</u></b>")
-lastPacketTimeLabel = QtGui.QLabel("<b>Timestamp</b>")
-lastPacketCounterValue = QtGui.QLabel("%.1f seconds ago." % last_packet_timer)
-lastPacketTimeValue = QtGui.QLabel("No Packet Yet")
-lastPacketTypeLabel = QtGui.QLabel("<b>Type:</b>")
-lastPacketTypeValue = QtGui.QLabel("None")
-lastPacketIDLabel = QtGui.QLabel("<b>Source/Dest:</b>")
-lastPacketIDValue = QtGui.QLabel("-")
-lastPacketRSSILabel = QtGui.QLabel("<b>RSSI:</b>")
-lastPacketRSSIValue = QtGui.QLabel("-000 dBm")
-lastPacketSNRLabel = QtGui.QLabel("<b>SNR:</b>")
-lastPacketSNRValue = QtGui.QLabel("00.00 dB")
-lastPacketFreqErrorLabel = QtGui.QLabel("<b>Freq Error:</b>")
-lastPacketFreqErrorValue = QtGui.QLabel("0000 Hz")
+lastPacketTitle = QtWidgets.QLabel("<b><u>Last Packet</u></b>")
+lastPacketTimeLabel = QtWidgets.QLabel("<b>Timestamp</b>")
+lastPacketCounterValue = QtWidgets.QLabel("%.1f seconds ago." % last_packet_timer)
+lastPacketTimeValue = QtWidgets.QLabel("No Packet Yet")
+lastPacketTypeLabel = QtWidgets.QLabel("<b>Type:</b>")
+lastPacketTypeValue = QtWidgets.QLabel("None")
+lastPacketIDLabel = QtWidgets.QLabel("<b>Source/Dest:</b>")
+lastPacketIDValue = QtWidgets.QLabel("-")
+lastPacketRSSILabel = QtWidgets.QLabel("<b>RSSI:</b>")
+lastPacketRSSIValue = QtWidgets.QLabel("-000 dBm")
+lastPacketSNRLabel = QtWidgets.QLabel("<b>SNR:</b>")
+lastPacketSNRValue = QtWidgets.QLabel("00.00 dB")
+lastPacketFreqErrorLabel = QtWidgets.QLabel("<b>Freq Error:</b>")
+lastPacketFreqErrorValue = QtWidgets.QLabel("0000 Hz")
 
-lastPacketLayout = QtGui.QGridLayout()
+lastPacketLayout = QtWidgets.QGridLayout()
 lastPacketLayout.addWidget(lastPacketTitle,0,0,1,2)
 lastPacketLayout.addWidget(lastPacketTimeLabel,1,0,1,2)
 lastPacketLayout.addWidget(lastPacketTimeValue,2,0,1,2)
@@ -145,28 +145,28 @@ lastPacketFrame.setLayout(lastPacketLayout)
 
 # PAYLOAD STATUS WIDGET
 # Displays Payload Stats.
-payloadStatusFrame = QtGui.QFrame()
+payloadStatusFrame = QtWidgets.QFrame()
 payloadStatusFrame.setFixedSize(180,220)
-payloadStatusFrame.setFrameStyle(QtGui.QFrame.Box)
+payloadStatusFrame.setFrameStyle(QtWidgets.QFrame.Box)
 payloadStatusFrame.setLineWidth(1)
-payloadStatusTitle = QtGui.QLabel("<b><u>Payload Position</u></b>")
+payloadStatusTitle = QtWidgets.QLabel("<b><u>Payload Position</u></b>")
 
-payloadStatusPacketCount = QtGui.QLabel("<b>Count:</b>")
-payloadStatusPacketCountValue = QtGui.QLabel("0")
-payloadStatusPacketTime = QtGui.QLabel("<b>Time:</b>")
-payloadStatusPacketTimeValue = QtGui.QLabel("00:00:00")
-payloadStatusPacketLatitude = QtGui.QLabel("<b>Latitude:</b>")
-payloadStatusPacketLatitudeValue = QtGui.QLabel("-00.00000")
-payloadStatusPacketLongitude = QtGui.QLabel("<b>Longitude:</b>")
-payloadStatusPacketLongitudeValue = QtGui.QLabel("000.00000")
-payloadStatusPacketAltitude = QtGui.QLabel("<b>Altitude:</b>")
-payloadStatusPacketAltitudeValue = QtGui.QLabel("00000m")
-payloadStatusPacketSpeed = QtGui.QLabel("<b>Speed</b>")
-payloadStatusPacketSpeedValue = QtGui.QLabel("000kph")
-payloadStatusPacketSats = QtGui.QLabel("<b>Satellites:</b>")
-payloadStatusPacketSatsValue = QtGui.QLabel("0")
+payloadStatusPacketCount = QtWidgets.QLabel("<b>Count:</b>")
+payloadStatusPacketCountValue = QtWidgets.QLabel("0")
+payloadStatusPacketTime = QtWidgets.QLabel("<b>Time:</b>")
+payloadStatusPacketTimeValue = QtWidgets.QLabel("00:00:00")
+payloadStatusPacketLatitude = QtWidgets.QLabel("<b>Latitude:</b>")
+payloadStatusPacketLatitudeValue = QtWidgets.QLabel("-00.00000")
+payloadStatusPacketLongitude = QtWidgets.QLabel("<b>Longitude:</b>")
+payloadStatusPacketLongitudeValue = QtWidgets.QLabel("000.00000")
+payloadStatusPacketAltitude = QtWidgets.QLabel("<b>Altitude:</b>")
+payloadStatusPacketAltitudeValue = QtWidgets.QLabel("00000m")
+payloadStatusPacketSpeed = QtWidgets.QLabel("<b>Speed</b>")
+payloadStatusPacketSpeedValue = QtWidgets.QLabel("000kph")
+payloadStatusPacketSats = QtWidgets.QLabel("<b>Satellites:</b>")
+payloadStatusPacketSatsValue = QtWidgets.QLabel("0")
 
-payloadStatusLayout = QtGui.QGridLayout()
+payloadStatusLayout = QtWidgets.QGridLayout()
 payloadStatusLayout.addWidget(payloadStatusTitle,0,0,1,2)
 payloadStatusLayout.addWidget(payloadStatusPacketCount,1,0)
 payloadStatusLayout.addWidget(payloadStatusPacketCountValue,1,1)
@@ -187,24 +187,24 @@ payloadStatusFrame.setLayout(payloadStatusLayout)
 
 # PAYLOAD OTHER VALUES
 # More payload stats!
-payloadOtherStatusFrame = QtGui.QFrame()
+payloadOtherStatusFrame = QtWidgets.QFrame()
 payloadOtherStatusFrame.setFixedSize(180,220)
-payloadOtherStatusFrame.setFrameStyle(QtGui.QFrame.Box)
+payloadOtherStatusFrame.setFrameStyle(QtWidgets.QFrame.Box)
 payloadOtherStatusFrame.setLineWidth(1)
-payloadOtherStatusTitle = QtGui.QLabel("<b><u>Payload Telemetry</u></b>")
+payloadOtherStatusTitle = QtWidgets.QLabel("<b><u>Payload Telemetry</u></b>")
 
-payloadOtherStatusBattLabel = QtGui.QLabel("<b>Batt Voltage:</b/>")
-payloadOtherStatusBattValue = QtGui.QLabel("0.00 V")
-payloadOtherStatusPyroLabel = QtGui.QLabel("<b>Pyro Voltage:</b>")
-payloadOtherStatusPyroValue = QtGui.QLabel("0.00 V")
-payloadOtherStatusRxPacketsLabel = QtGui.QLabel("<b>RXed Packets:</b>")
-payloadOtherStatusRxPacketsValue = QtGui.QLabel("0")
-payloadOtherStatusRSSILabel = QtGui.QLabel("<b>Noise Floor:</b>")
-payloadOtherStatusRSSIValue = QtGui.QLabel("-000 dBm")
-payloadOtherStatusUplinkLabel = QtGui.QLabel("<b>Uplink Slot:</b>")
-payloadOtherStatusUplinkValue = QtGui.QLabel("0/0")
+payloadOtherStatusBattLabel = QtWidgets.QLabel("<b>Batt Voltage:</b/>")
+payloadOtherStatusBattValue = QtWidgets.QLabel("0.00 V")
+payloadOtherStatusPyroLabel = QtWidgets.QLabel("<b>Pyro Voltage:</b>")
+payloadOtherStatusPyroValue = QtWidgets.QLabel("0.00 V")
+payloadOtherStatusRxPacketsLabel = QtWidgets.QLabel("<b>RXed Packets:</b>")
+payloadOtherStatusRxPacketsValue = QtWidgets.QLabel("0")
+payloadOtherStatusRSSILabel = QtWidgets.QLabel("<b>Noise Floor:</b>")
+payloadOtherStatusRSSIValue = QtWidgets.QLabel("-000 dBm")
+payloadOtherStatusUplinkLabel = QtWidgets.QLabel("<b>Uplink Slot:</b>")
+payloadOtherStatusUplinkValue = QtWidgets.QLabel("0/0")
 
-payloadOtherStatusLayout = QtGui.QGridLayout()
+payloadOtherStatusLayout = QtWidgets.QGridLayout()
 payloadOtherStatusLayout.addWidget(payloadOtherStatusTitle,0,0,1,2)
 payloadOtherStatusLayout.addWidget(payloadOtherStatusBattLabel,1,0)
 payloadOtherStatusLayout.addWidget(payloadOtherStatusBattValue,1,1)
@@ -221,28 +221,28 @@ payloadOtherStatusFrame.setLayout(payloadOtherStatusLayout)
 
 
 # PING & CUTDOWN Widget
-cutdownFrame = QtGui.QFrame()
+cutdownFrame = QtWidgets.QFrame()
 cutdownFrame.setFixedSize(400,100)
-cutdownFrame.setFrameStyle(QtGui.QFrame.Box)
+cutdownFrame.setFrameStyle(QtWidgets.QFrame.Box)
 cutdownFrame.setLineWidth(1)
-cutdownFrameTitle = QtGui.QLabel("<b><u>Uplink Command</u></b>")
+cutdownFrameTitle = QtWidgets.QLabel("<b><u>Uplink Command</u></b>")
 
-cutdownCommandLabel = QtGui.QLabel("<b>Command</b>")
-cutdownCommandValue = QtGui.QComboBox()
+cutdownCommandLabel = QtWidgets.QLabel("<b>Command</b>")
+cutdownCommandValue = QtWidgets.QComboBox()
 cutdownCommandValue.addItem("Ping")
 cutdownCommandValue.addItem("Cutdown")
 cutdownCommandValue.addItem("Update Rate")
 cutdownCommandValue.addItem("Set Payload ID")
 cutdownCommandValue.addItem("Set Num Payloads")
 cutdownCommandValue.addItem("Reset Uplink Slots")
-cutdownParameterLabel = QtGui.QLabel("<b>Value</b>")
-cutdownParameterValue = QtGui.QLineEdit("4")
-cutdownParameterPasswordLabel = QtGui.QLabel("<b>Password</b>")
-cutdownParameterPassword = QtGui.QLineEdit("abc")
+cutdownParameterLabel = QtWidgets.QLabel("<b>Value</b>")
+cutdownParameterValue = QtWidgets.QLineEdit("4")
+cutdownParameterPasswordLabel = QtWidgets.QLabel("<b>Password</b>")
+cutdownParameterPassword = QtWidgets.QLineEdit("abc")
 cutdownParameterPassword.setMaxLength(3)
-cutdownButton = QtGui.QPushButton("Send")
+cutdownButton = QtWidgets.QPushButton("Send")
 
-cutdownLayout = QtGui.QGridLayout()
+cutdownLayout = QtWidgets.QGridLayout()
 cutdownLayout.addWidget(cutdownFrameTitle,0,0,1,2)
 cutdownLayout.addWidget(cutdownCommandLabel,1,0)
 cutdownLayout.addWidget(cutdownCommandValue,2,0)
@@ -285,13 +285,13 @@ def cutdownButtonPressed():
         ping_packet = create_param_change_packet(param = HORUS_PAYLOAD_PARAMS.PING, value = uplink_value, passcode = cutdown_password, destination = current_payload)
         tx_packet(ping_packet, destination = current_payload)
     elif str(cutdownCommandValue.currentText()) == "Cutdown":
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setText("Are you sure you want to cutdown payload ID #%d?" % current_payload)
         msgBox.setInformativeText("Really really really sure?")
-        msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        msgBox.setDefaultButton(QtGui.QMessageBox.No)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         reply = msgBox.exec_()
-        if reply == QtGui.QMessageBox.No:
+        if reply == QtWidgets.QMessageBox.No:
             return
         else:
             # Actually Cutdown!
@@ -303,44 +303,44 @@ def cutdownButtonPressed():
     elif str(cutdownCommandValue.currentText()) == "Set Payload ID":
         # If we have seen a payload with this ID, prompt the user.
         if uplink_value in getHeardPayloadList():
-            msgBox = QtGui.QMessageBox()
+            msgBox = QtWidgets.QMessageBox()
             msgBox.setText("Specified Payload ID has been seen recently, are you sure?")
-            msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-            msgBox.setDefaultButton(QtGui.QMessageBox.No)
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
             reply = msgBox.exec_()
-            if reply == QtGui.QMessageBox.No:
+            if reply == QtWidgets.QMessageBox.No:
                 return
 
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setText("Are you sure you want to change Payload #%d to Payload #%d?" % (current_payload, uplink_value))
-        msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        msgBox.setDefaultButton(QtGui.QMessageBox.No)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         reply = msgBox.exec_()
-        if reply == QtGui.QMessageBox.No:
+        if reply == QtWidgets.QMessageBox.No:
             return
 
         param_packet = create_param_change_packet(param = HORUS_PAYLOAD_PARAMS.PAYLOAD_ID, value = uplink_value, passcode = cutdown_password, destination = current_payload)
         tx_packet(param_packet, destination = current_payload)
     elif str(cutdownCommandValue.currentText()) == "Set Num Payloads":
 
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setText("Are you sure you want set Payload #%d's num_payloads variable to %d?" % (current_payload, uplink_value))
-        msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        msgBox.setDefaultButton(QtGui.QMessageBox.No)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         reply = msgBox.exec_()
-        if reply == QtGui.QMessageBox.No:
+        if reply == QtWidgets.QMessageBox.No:
             return
 
         param_packet = create_param_change_packet(param = HORUS_PAYLOAD_PARAMS.NUM_PAYLOADS, value = uplink_value, passcode = cutdown_password, destination = current_payload)
         tx_packet(param_packet, destination = current_payload)
     elif str(cutdownCommandValue.currentText()) == "Reset Uplink Slots":
 
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setText("Are you sure you want to reset Payload #%d's Uplink Slots?" % (current_payload))
-        msgBox.setStandardButtons(QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        msgBox.setDefaultButton(QtGui.QMessageBox.No)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        msgBox.setDefaultButton(QtWidgets.QMessageBox.No)
         reply = msgBox.exec_()
-        if reply == QtGui.QMessageBox.No:
+        if reply == QtWidgets.QMessageBox.No:
             return
 
         param_packet = create_param_change_packet(param = HORUS_PAYLOAD_PARAMS.RESET_SLOTS, value = uplink_value, passcode = cutdown_password, destination = current_payload)
@@ -351,24 +351,24 @@ def cutdownButtonPressed():
 cutdownButton.clicked.connect(cutdownButtonPressed)
 
 # UPLINK RESPONSE WIDGET
-cutdownResponseFrame = QtGui.QFrame()
+cutdownResponseFrame = QtWidgets.QFrame()
 cutdownResponseFrame.setFixedSize(400,100)
-cutdownResponseFrame.setFrameStyle(QtGui.QFrame.Box)
+cutdownResponseFrame.setFrameStyle(QtWidgets.QFrame.Box)
 cutdownResponseFrame.setLineWidth(1)
-cutdownResponseFrameTitle = QtGui.QLabel("<b><u>Uplink Response</u></b>")
+cutdownResponseFrameTitle = QtWidgets.QLabel("<b><u>Uplink Response</u></b>")
 
-cutdownResponseTimeLabel = QtGui.QLabel("<b>Packet Time:</b>")
-cutdownResponseTimeValue = QtGui.QLabel("No Ack Yet.")
-cutdownResponseRSSILabel = QtGui.QLabel("<b>RSSI</b>")
-cutdownResponseRSSIValue = QtGui.QLabel("- dBm")
-cutdownResponseSNRLabel = QtGui.QLabel("<b>SNR</b>")
-cutdownResponseSNRValue = QtGui.QLabel("- dB")
-cutdownResponseTypeLabel = QtGui.QLabel("<b>Type</b>")
-cutdownResponseTypeValue = QtGui.QLabel("")
-cutdownResponseParamLabel = QtGui.QLabel("<b>Parameter</b>")
-cutdownResponseParamValue = QtGui.QLabel("")
+cutdownResponseTimeLabel = QtWidgets.QLabel("<b>Packet Time:</b>")
+cutdownResponseTimeValue = QtWidgets.QLabel("No Ack Yet.")
+cutdownResponseRSSILabel = QtWidgets.QLabel("<b>RSSI</b>")
+cutdownResponseRSSIValue = QtWidgets.QLabel("- dBm")
+cutdownResponseSNRLabel = QtWidgets.QLabel("<b>SNR</b>")
+cutdownResponseSNRValue = QtWidgets.QLabel("- dB")
+cutdownResponseTypeLabel = QtWidgets.QLabel("<b>Type</b>")
+cutdownResponseTypeValue = QtWidgets.QLabel("")
+cutdownResponseParamLabel = QtWidgets.QLabel("<b>Parameter</b>")
+cutdownResponseParamValue = QtWidgets.QLabel("")
 
-cutdownResponseLayout = QtGui.QGridLayout()
+cutdownResponseLayout = QtWidgets.QGridLayout()
 cutdownResponseLayout.addWidget(cutdownResponseFrameTitle,0,0,1,2)
 cutdownResponseLayout.addWidget(cutdownResponseTimeLabel,1,0,1,1)
 cutdownResponseLayout.addWidget(cutdownResponseTimeValue,1,1,1,3)
@@ -383,23 +383,23 @@ cutdownResponseLayout.addWidget(cutdownResponseParamValue,3,3,1,1)
 
 cutdownResponseFrame.setLayout(cutdownResponseLayout)
 
-lowpriFrame = QtGui.QFrame()
+lowpriFrame = QtWidgets.QFrame()
 lowpriFrame.setFixedSize(200,190)
-lowpriFrame.setFrameStyle(QtGui.QFrame.Box)
+lowpriFrame.setFrameStyle(QtWidgets.QFrame.Box)
 lowpriFrame.setLineWidth(1)
-lowpriFrameTitle = QtGui.QLabel("<b><u>Low-Rate Uplink</u></b>")
-lowpriFrameEnabled = QtGui.QCheckBox("Enable Car Telemetry")
+lowpriFrameTitle = QtWidgets.QLabel("<b><u>Low-Rate Uplink</u></b>")
+lowpriFrameEnabled = QtWidgets.QCheckBox("Enable Car Telemetry")
 lowpriFrameEnabled.setChecked(False)
-lowpriFrameSlotLabel = QtGui.QLabel("<b>My Slot:</b>")
-lowpriFrameSlotValue = QtGui.QLabel("None")
-lowpriRequestButton = QtGui.QPushButton("Request")
-lowpriResetButton = QtGui.QPushButton("Reset")
-lowpriGPSLabel = QtGui.QLabel("<b>My Position</b>")
-lowpriGPSValue = QtGui.QLabel("0.0,0.0 0 kph")
-lowpriFrameMessage = QtGui.QLineEdit("QRZ?")
+lowpriFrameSlotLabel = QtWidgets.QLabel("<b>My Slot:</b>")
+lowpriFrameSlotValue = QtWidgets.QLabel("None")
+lowpriRequestButton = QtWidgets.QPushButton("Request")
+lowpriResetButton = QtWidgets.QPushButton("Reset")
+lowpriGPSLabel = QtWidgets.QLabel("<b>My Position</b>")
+lowpriGPSValue = QtWidgets.QLabel("0.0,0.0 0 kph")
+lowpriFrameMessage = QtWidgets.QLineEdit("QRZ?")
 lowpriFrameMessage.setMaxLength(CAR_TELEMETRY_MESSAGE_LENGTH)
 
-lowpriFrameLayout = QtGui.QGridLayout()
+lowpriFrameLayout = QtWidgets.QGridLayout()
 lowpriFrameLayout.addWidget(lowpriFrameTitle,0,0,1,2)
 lowpriFrameLayout.addWidget(lowpriFrameEnabled,1,0,1,2)
 lowpriFrameLayout.addWidget(lowpriFrameSlotLabel,2,0,1,1)
@@ -456,17 +456,17 @@ def foxtrot_update(telemetry):
 
 
 # Car Telemetry Data Frame
-carTelemFrame = QtGui.QFrame()
+carTelemFrame = QtWidgets.QFrame()
 carTelemFrame.setFixedSize(200,190)
-carTelemFrame.setFrameStyle(QtGui.QFrame.Box)
+carTelemFrame.setFrameStyle(QtWidgets.QFrame.Box)
 carTelemFrame.setLineWidth(1)
 
-carTelemFrameTitle = QtGui.QLabel("<b><u>Car Telemetry Data</u></b>")
-carTelemData = QtGui.QPlainTextEdit()
+carTelemFrameTitle = QtWidgets.QLabel("<b><u>Car Telemetry Data</u></b>")
+carTelemData = QtWidgets.QPlainTextEdit()
 carTelemData.setReadOnly(True)
-manualBeaconButton = QtGui.QPushButton("Manual Beacon")
+manualBeaconButton = QtWidgets.QPushButton("Manual Beacon")
 
-carTelemFrameLayout = QtGui.QGridLayout()
+carTelemFrameLayout = QtWidgets.QGridLayout()
 carTelemFrameLayout.addWidget(carTelemFrameTitle,0,0,1,2)
 carTelemFrameLayout.addWidget(carTelemData,1,0,1,2)
 carTelemFrameLayout.addWidget(manualBeaconButton,2,0,1,2)
@@ -594,8 +594,8 @@ gs_log = open(groundstation_log,'a')
 #
 # Create and Lay-out window
 #
-main_widget = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+main_widget = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 main_widget.setLayout(layout)
 # Add Widgets
 layout.addWidget(payloadSelectionFrame,0,0,2,1)
@@ -610,20 +610,20 @@ layout.addWidget(packetSnifferFrame,2,0,1,4)
 layout.addWidget(lowpriFrame,2,4,1,1)
 layout.addWidget(carTelemFrame,2,5,1,1)
 
-mainwin = QtGui.QMainWindow()
+mainwin = QtWidgets.QMainWindow()
 
 #
 # Create Menu Bar
 #
 # Exit Button
-exitAction = QtGui.QAction('&Exit', mainwin)        
+exitAction = QtWidgets.QAction('&Exit', mainwin)        
 exitAction.setShortcut('Ctrl+Q')
 exitAction.setStatusTip('Exit application')
-exitAction.triggered.connect(QtGui.qApp.quit)
+exitAction.triggered.connect(QtWidgets.qApp.quit)
 
 # Change frequency Option
 def change_frequency():
-    text, ok = QtGui.QInputDialog.getText(main_widget,'Change Operating Freq', 'New Freq (MHz):')
+    text, ok = QtWidgets.QInputDialog.getText(main_widget,'Change Operating Freq', 'New Freq (MHz):')
 
     if ok:
         try:
@@ -632,7 +632,7 @@ def change_frequency():
         except:
             print("Invalid frequency selection.")
 
-frequencyAction = QtGui.QAction('&Frequency Change', mainwin)
+frequencyAction = QtWidgets.QAction('&Frequency Change', mainwin)
 frequencyAction.setShortcut('Ctrl+F')
 frequencyAction.setStatusTip('Change operating frequency of UDP-LoRa bridge.')
 frequencyAction.triggered.connect(change_frequency)
@@ -926,5 +926,5 @@ udp_timer.start(int(timer_update_rate*1000))
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         udp_listener_running = False

@@ -24,7 +24,7 @@ import traceback
 from threading import Thread
 from horuslib import *
 from horuslib.oziplotter import *
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 FLDIGI_PORT = 7322
 FLDIGI_HOST = '127.0.0.1'
@@ -195,20 +195,20 @@ data_age = 0.0
 
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 #
 # Create and Lay-out window
 #
-main_widget = QtGui.QWidget()
-layout = QtGui.QGridLayout()
+main_widget = QtWidgets.QWidget()
+layout = QtWidgets.QGridLayout()
 main_widget.setLayout(layout)
 # Create Widgets
 
 
-fldigiData = QtGui.QLabel("Not Connected.")
+fldigiData = QtWidgets.QLabel("Not Connected.")
 fldigiData.setFont(QtGui.QFont("Courier New", 14, QtGui.QFont.Bold))
-fldigiAge = QtGui.QLabel("No Data Yet...")
+fldigiAge = QtWidgets.QLabel("No Data Yet...")
 
 
 # Final layout of frames
@@ -216,7 +216,7 @@ layout.addWidget(fldigiData)
 layout.addWidget(fldigiAge)
 
 
-mainwin = QtGui.QMainWindow()
+mainwin = QtWidgets.QMainWindow()
 
 # Finalise and show the window
 mainwin.setWindowTitle("FlDigi Bridge")
@@ -253,5 +253,5 @@ if __name__ == "__main__":
     _fldigi = FldigiBridge(callback=data_callback)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         _fldigi.close()

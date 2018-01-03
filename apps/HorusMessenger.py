@@ -8,7 +8,7 @@
 from horuslib import *
 from horuslib.packets import *
 from threading import Thread
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 from datetime import datetime
 import socket,json,sys,Queue,traceback
 import ConfigParser
@@ -23,38 +23,38 @@ rxqueue = Queue.Queue(16)
 txed_packets = []
 
 # PyQt Window Setup
-app = QtGui.QApplication([])
+app = QtWidgets.QApplication([])
 
 # Widgets
-statusLabel = QtGui.QLabel("No updates yet..")
-console = QtGui.QPlainTextEdit()
+statusLabel = QtWidgets.QLabel("No updates yet..")
+console = QtWidgets.QPlainTextEdit()
 console.setReadOnly(True)
-callsignBox = QtGui.QLineEdit("N0CALL")
+callsignBox = QtWidgets.QLineEdit("N0CALL")
 callsignBox.setFixedWidth(100)
 callsignBox.setMaxLength(8)
-messageBox = QtGui.QLineEdit("")
+messageBox = QtWidgets.QLineEdit("")
 messageBox.setMaxLength(55)
 
 # Create and Lay-out window
-win = QtGui.QWidget()
+win = QtWidgets.QWidget()
 win.resize(600,200)
 win.show()
 win.setWindowTitle("Horus Messenger")
-layout = QtGui.QGridLayout()
+layout = QtWidgets.QGridLayout()
 win.setLayout(layout)
 
 # PAYLOAD SELECTION WIDGET (from HorusGroundStation)
-payloadSelectionFrame = QtGui.QFrame()
+payloadSelectionFrame = QtWidgets.QFrame()
 payloadSelectionFrame.setFixedSize(150,220)
-payloadSelectionFrame.setFrameStyle(QtGui.QFrame.Box)
+payloadSelectionFrame.setFrameStyle(QtWidgets.QFrame.Box)
 payloadSelectionFrame.setLineWidth(2)
-payloadSelectionTitle = QtGui.QLabel("<b><u>Payload ID</u></b>")
-payloadSelectionLabel = QtGui.QLabel("<b>Current:</b>")
-payloadSelectionValue = QtGui.QLabel("%d" % current_payload)
-payloadSelectionListLabel = QtGui.QLabel("<b>Heard Payloads:</b>")
-payloadSelectionList = QtGui.QListWidget()
+payloadSelectionTitle = QtWidgets.QLabel("<b><u>Payload ID</u></b>")
+payloadSelectionLabel = QtWidgets.QLabel("<b>Current:</b>")
+payloadSelectionValue = QtWidgets.QLabel("%d" % current_payload)
+payloadSelectionListLabel = QtWidgets.QLabel("<b>Heard Payloads:</b>")
+payloadSelectionList = QtWidgets.QListWidget()
 
-payloadSelectionLayout = QtGui.QGridLayout()
+payloadSelectionLayout = QtWidgets.QGridLayout()
 payloadSelectionLayout.addWidget(payloadSelectionTitle,0,0,1,2)
 payloadSelectionLayout.addWidget(payloadSelectionLabel,1,0,1,1)
 payloadSelectionLayout.addWidget(payloadSelectionValue,1,1,1,1)
@@ -217,5 +217,5 @@ timer.start(100)
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+        QtWidgets.QApplication.instance().exec_()
         udp_listener_running = False
