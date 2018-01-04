@@ -22,6 +22,12 @@ udp_listener_running = False
 # RX Message queue to avoid threading issues.
 rxqueue = Queue.Queue(16)
 
+# At what data age (Seconds) do we show a warning or error indication?
+PAYLOAD_DATA_WARN = 20.0
+PAYLOAD_DATA_ERROR = 60.0
+GPS_DATA_WARN = 10.0 # We expect GPS data to be coming in once per second.
+GPS_DATA_ERROR = 30.0
+
 # Local Payload state variables.
 use_supplied_time = False
 payload_latitude = 0.0
@@ -69,7 +75,20 @@ elevationValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bo
 rangeLabel = QtWidgets.QLabel("<b>Range</b>")
 rangeValue = QtWidgets.QLabel("<b>0000m</b>")
 rangeValue.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
-statusLabel = QtWidgets.QLabel("Payload Data Age: %0.1fs \t GPS Data Age: %0.1fs" % (payload_data_age,car_data_age))
+
+statusLabel1 = QtWidgets.QLabel("<b>Payload Data Age:</b>")
+statusLabel1.setAlignment(QtCore.Qt.AlignRight)
+statusValue1 = QtWidgets.QLabel("%0.1fs" % (payload_data_age))
+statusValue1.setAlignment(QtCore.Qt.AlignCenter)
+statusLabel2 = QtWidgets.QLabel("<b>GPS Data Age:</b>")
+statusLabel2.setAlignment(QtCore.Qt.AlignRight)
+statusValue2 = QtWidgets.QLabel("%0.1fs" % (car_data_age))
+statusValue2.setAlignment(QtCore.Qt.AlignCenter)
+statusValue1.setAutoFillBackground(True)
+statusValue1.setStyleSheet("background: green")
+statusValue2.setAutoFillBackground(True)
+statusValue2.setStyleSheet("background: green")
+
 
 # Lay Out Widgets
 layout.addWidget(altitudeLabel,0,0)
@@ -84,7 +103,10 @@ layout.addWidget(elevationLabel,1,2)
 layout.addWidget(elevationValue,1,3)
 layout.addWidget(rangeLabel,1,4)
 layout.addWidget(rangeValue,1,5)
-layout.addWidget(statusLabel,2,0,1,6)
+layout.addWidget(statusLabel1,2,0,1,2)
+layout.addWidget(statusValue1,2,2,1,1)
+layout.addWidget(statusLabel2,2,3,1,2)
+layout.addWidget(statusValue2,2,5,1,1)
 
 
 mainwin = QtWidgets.QMainWindow()
@@ -248,7 +270,7 @@ def udp_rx_thread():
 
 
 def read_queue():
-    global statusLabel, payload_data_age, car_data_age
+    global statusValue1, statusValue2, payload_data_age, car_data_age
     try:
         packet = rxqueue.get_nowait()
         process_udp(packet)
@@ -258,7 +280,22 @@ def read_queue():
     # Update 'data age' text.
     payload_data_age += 0.1
     car_data_age += 0.1
-    statusLabel.setText("Payload Data Age: %0.1fs \t GPS Data Age: %0.1fs" % (payload_data_age,car_data_age))
+    statusValue1.setText("%0.1fs" % payload_data_age)
+    statusValue2.setText("%0.1fs" % car_data_age)
+
+    if payload_data_age > PAYLOAD_DATA_ERROR:
+        statusValue1.setStyleSheet("background: red") 
+    elif payload_data_age > PAYLOAD_DATA_WARN:
+        statusValue1.setStyleSheet("background: yellow")
+    else:
+        statusValue1.setStyleSheet("background: green")
+
+    if car_data_age > GPS_DATA_ERROR:
+        statusValue2.setStyleSheet("background: red") 
+    elif car_data_age > GPS_DATA_WARN:
+        statusValue2.setStyleSheet("background: yellow")
+    else:
+        statusValue2.setStyleSheet("background: green")
 
 # Start a timer to attempt to read the remote station status every 5 seconds.
 timer = QtCore.QTimer()
