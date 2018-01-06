@@ -113,8 +113,6 @@ def update_vehicle_list():
 
 vehicleUpdate.clicked.connect(update_vehicle_list)
 
-update_vehicle_list()
-
 def update_from_habitat():
     ''' Update the selected vehicles position from Habitat '''
 
