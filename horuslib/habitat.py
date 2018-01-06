@@ -51,19 +51,22 @@ def habitat_upload_payload_telemetry(telemetry, payload_callsign = "HORUSLORA", 
 
 
 # URL to the spacenear.us datanew.php script, which we use to grab a JSON blob of vehicle (payload) data.
-SPACENEARUS_DATANEW_URL = "https://spacenear.us/tracker/datanew.php?mode=1hour&type=positions&format=json&max_positions=%d&position_id=0"
+SPACENEARUS_DATANEW_URL = "https://spacenear.us/tracker/datanew.php?mode=%s&type=positions&format=json&max_positions=%d&position_id=0"
 SPACENEARUS_TIMEOUT = 10
 
 
-def get_vehicle_data(max_positions=100, vehicle=None, timeout=SPACENEARUS_TIMEOUT):
+def get_vehicle_data(max_positions=100, vehicle=None, timeout=SPACENEARUS_TIMEOUT, history='1hour'):
     '''
     Attempt to get vehicle data from spacenear.us, using the same interface as the tracker.
 
     Returns (True, json_data) if request was successful,
     otherwise returns (False, "error message")
+
+    The 'history' parameter sets how many hours back to get data for. This can be either:
+    1hour, 3hours, 6hours
      '''
 
-    _request_url = SPACENEARUS_DATANEW_URL % max_positions
+    _request_url = SPACENEARUS_DATANEW_URL % (history, max_positions)
 
     # Add on the specific vehicle flag if we want it.
     if vehicle is not None:
@@ -78,10 +81,10 @@ def get_vehicle_data(max_positions=100, vehicle=None, timeout=SPACENEARUS_TIMEOU
         return (False, str(e))
 
 
-def get_vehicle_list(max_positions=100, timeout=SPACENEARUS_TIMEOUT):
+def get_vehicle_list(max_positions=100, timeout=SPACENEARUS_TIMEOUT, history='1hour'):
     ''' Wrapper for the above, returning a list of vehicles. '''
 
-    (success, _data) = get_vehicle_data(max_positions=max_positions, timeout=timeout)
+    (success, _data) = get_vehicle_data(max_positions=max_positions, timeout=timeout, history=history)
 
     if not success:
         return (success, _data)
@@ -105,10 +108,10 @@ def get_vehicle_list(max_positions=100, timeout=SPACENEARUS_TIMEOUT):
         return (False, str(e))
 
 
-def get_latest_position(vehicle, timeout=SPACENEARUS_TIMEOUT):
+def get_latest_position(vehicle, timeout=SPACENEARUS_TIMEOUT, history='1hour'):
     ''' Attempt to get the most recent position for a given vehicle. '''
 
-    (success, _vehicle_data) = get_vehicle_data(max_positions=1, vehicle=vehicle)
+    (success, _vehicle_data) = get_vehicle_data(max_positions=1, vehicle=vehicle, history=history)
 
     if success:
         try:
