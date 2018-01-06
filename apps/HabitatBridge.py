@@ -63,9 +63,10 @@ layout.addWidget(vehicleList,0,1,1,2)
 layout.addWidget(vehicleUpdate,0,3,1,1)
 layout.addWidget(vehicleData,1,0,1,3)
 layout.addWidget(outputEnabled,1,3,1,1)
-layout.addWidget(vehicleData2,2,0,1,4)
+layout.addWidget(vehicleData2,2,0,1,3)
+layout.addWidget(dataAgeLabel,2,3,1,1)
 layout.addWidget(statusLabel,3,0,1,4)
-layout.addWidget(dataAgeLabel,4,0,1,4)
+
 
 mainwin = QtWidgets.QMainWindow()
 
@@ -80,7 +81,7 @@ def data_age_timer():
     ''' Update the 'data age' status display '''
     global data_age, dataAgeLabel
     data_age += 0.1
-    dataAgeLabel.setText("Position Data Age: %0.1fs" % data_age)
+    dataAgeLabel.setText("Data Age: %0.1fs" % data_age)
 
 
 def update_vehicle_list():
@@ -112,6 +113,7 @@ def update_vehicle_list():
 
 vehicleUpdate.clicked.connect(update_vehicle_list)
 
+update_vehicle_list()
 
 def update_from_habitat():
     ''' Update the selected vehicles position from Habitat '''
