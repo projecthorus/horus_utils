@@ -700,8 +700,8 @@ def udp_packet_to_string(udp_packet):
         timestamp = datetime.utcnow().isoformat()
         return "%s Local GPS: %.4f,%.4f %d kph %d m" % (timestamp,udp_packet['latitude'], udp_packet['longitude'], udp_packet['speed'], udp_packet['altitude'])
     elif pkt_type == "PAYLOAD_SUMMARY":
-        timestamp == datetime.utcnow().isoformat()
-        return "%s Payload Summary Status" % timestamp
+        timestamp = datetime.utcnow().isoformat()
+        return "%s Payload Summary Status: %.5f, %.5f, %d" % (timestamp, udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'])
     elif pkt_type == "LOWPRIORITY":
         if 'payload' in udp_packet.keys():
             if udp_packet['payload'] == []:

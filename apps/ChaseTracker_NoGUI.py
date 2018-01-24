@@ -29,6 +29,9 @@ serial_baud = int(config.get("GPS","serial_baud"))
 speed_cap = int(config.get("GPS","speed_cap"))
 stationary = bool(config.get("User","stationary"))
 
+# Only push GPS data out to the network, not to Habitat
+gps_only = False
+
 
 # Position Variables
 position_valid = False
@@ -276,7 +279,7 @@ def uploadLoop():
     """
     global position_valid, update_rate, upload_loop_running, last_upload_time
     while upload_loop_running:
-        if position_valid:
+        if position_valid and not gps_only:
             if (time.time() - last_upload_time) > update_rate:
                 uploadPosition()
                 last_upload_time = time.time()
@@ -287,6 +290,12 @@ def uploadLoop():
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'noupload':
+            print("Not uploading to habitat...s")
+            gps_only = True
+
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.INFO)
     logging.info("Starting Serial Listener Thread.")
     serial_thread = Thread(target=serialListener)
