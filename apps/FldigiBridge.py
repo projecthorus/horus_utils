@@ -126,6 +126,15 @@ class FldigiBridge(object):
         return hex(crc16(data))[2:].upper().zfill(4)
 
 
+    def send_to_callback(self, data):
+            ''' If we have been given a callback, send data do it. '''
+            if self.callback !=  None:
+                try:
+                    self.callback(data)
+                except:
+                    pass
+
+
     def process_data(self, data):
         """
         Attempt to process a line of data, and extract time, lat, lon and alt
@@ -148,6 +157,7 @@ class FldigiBridge(object):
             _calc_crc = self.crc16_ccitt(_telem)
 
             if _calc_crc != _crc:
+                self.send_to_callback("ERROR - CRC Fail.")
                 return
 
             # We now have a valid sentence! Extract fields..
@@ -164,14 +174,19 @@ class FldigiBridge(object):
             # Perform some sanity checks on the data.
 
             # Attempt to parse the time string. This will throw an error if any values are invalid.
-            _time_dt = datetime.strptime(_telem_dict['time'], "%H:%M:%S")
+            try:
+                _time_dt = datetime.strptime(_telem_dict['time'], "%H:%M:%S")
+            except:
+                self.send_to_callback("ERROR - Invalid Time.")
 
             # Check if the lat/long is 0.0,0.0 - no point passing this along.
             if _telem_dict['latitude'] == 0.0 or _telem_dict['longitude'] == 0.0:
+                self.send_to_callback("ERROR - Zero Lat/Long.")
                 return
 
             # Place a limit on the altitude field. We generally store altitude on the payload as a uint16, so it shouldn't fall outside these values.
             if _telem_dict['altitude'] > 65535 or _telem_dict['altitude'] < 0:
+                self.send_to_callback("ERROR - Invalid Altitude.")
                 return
 
             # We now have valid data!
@@ -179,7 +194,7 @@ class FldigiBridge(object):
             # If we have been given a callback, send the valid string to it.
             if self.callback !=  None:
                 try:
-                    self.callback(_sentence)
+                    self.callback("VALID: " + _sentence)
                 except:
                     pass
 
