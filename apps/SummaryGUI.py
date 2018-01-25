@@ -4,7 +4,9 @@
 #   Project Horus 
 #   Payload Summary GUI
 #   Used as a 'quick look' summary of basic payload statistics (alt, ascent rate, etc)
-#   Copyright 2017 Mark Jessop <vk5qi@rfhead.net>
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 
 from horuslib import *

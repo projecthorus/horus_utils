@@ -1,3 +1,9 @@
+#
+#   Project Horus - Telemetry Emulation Script
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
+#
 from horuslib.emulation import *
 
 if __name__ == '__main__':

@@ -1,7 +1,9 @@
 #!/usr/bin/env python2.7
 #
-#   Project Horus 
-#   Habitat (well, ok, spacenear.us) -> OziMux Bridge
+#   Project Horus - Habitat (well, ok, spacenear.us) -> OziMux Bridge
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #   Grab a list of currently observed vehicles on spacenear.us, and 
 #   allow the user to select from them. Once one is selected, continue

@@ -1,7 +1,9 @@
 #!/usr/bin/env python2.7
 #
-#   Project Horus 
-#   FlDigi -> OziMux Bridge
+#   Project Horus - FlDigi -> OziMux Bridge
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #   Receive sentences from FlDigi, and pass them onto OziMux or OziPlotter.
 #   Sentences must be of the form $$CALLSIGN,count,HH:MM:SS,lat,lon,alt,other,fields*CRC16
@@ -10,8 +12,6 @@
 #   [ ] Accept host/port parameters via a config file.
 #   [ ] Better handling of connection timeouts.
 #   [ ] Display incoming data 'live'?
-#
-#   Copyright 2017 Mark Jessop <vk5qi@rfhead.net>
 #
 
 import socket

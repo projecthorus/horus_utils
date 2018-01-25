@@ -4,7 +4,9 @@
 #   Project Horus 
 #   Rotator Control GUI
 #   Derivative of the SummaryGUI App, used to control a rotator.
-#   Copyright 2017 Mark Jessop <vk5qi@rfhead.net>
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #
 # TODO LIST:

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #
-# ChaseTracker 2.0
-# Written by: Mark Jessop <vk5qi@rfhead.net> (C) 2015
+#   ChaseTracker 2.0
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 import urllib2, json, ConfigParser, sys, time, serial, Queue, socket
 from threading import Thread

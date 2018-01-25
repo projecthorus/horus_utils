@@ -1,8 +1,9 @@
 #!/usr/bin/env python2.7
 #
-#   Project Horus
-#   LoRa-UDP Gateway Server
-#   Copyright 2015 Mark Jessop <vk5qi@rfhead.net>
+#   Project Horus - LoRa-UDP Gateway Server
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #   - Connects to and configures a LoRa receiver (SX127x family of ICs)
 #   - Uses UDP broadcast (port 55672) to send/receive as json-encoded dicts:

@@ -2,7 +2,9 @@
 #
 #   Project Horus 
 #   Pimoroni Four-Letter-Phat HUD
-#   Copyright 2015 Mark Jessop <vk5qi@rfhead.net>
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #   Displays payload altitude on a Pimoroni 'Four Letter Phat'
 #   See: https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-four-letter-phat

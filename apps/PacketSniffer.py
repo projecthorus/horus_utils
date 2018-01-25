@@ -2,7 +2,9 @@
 #
 #   Project Horus 
 #   Basic Telemetry RX
-#   Copyright 2015 Mark Jessop <vk5qi@rfhead.net>
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 #   A quick hack to test the binary telemetry decoder.
 

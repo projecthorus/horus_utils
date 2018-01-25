@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #
-# ChaseTracker - No GUI Version
-# Written by: Mark Jessop <vk5qi@rfhead.net> (C) 2017
+#   ChaseTracker - No GUI Version
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 # Upload chase car (or stationary listener) positions to Habitat, for plotting on the map.
 # Also pushes 'GPS' UDP broadcast packets into the local network, 

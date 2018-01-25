@@ -4,7 +4,9 @@
 #   OziPlotter Input Multiplexer
 #   Allow switching between multiple data sources for OziPlotter
 #   Also provides a unified source of 'Payload Summary' packets.
-#   Copyright 2017 Mark Jessop <vk5qi@rfhead.net>
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 import ConfigParser
 import socket
