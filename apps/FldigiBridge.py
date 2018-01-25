@@ -19,7 +19,7 @@ import time
 import sys
 import Queue
 import crcmod
-import datetime
+from datetime import datetime
 import traceback
 from threading import Thread
 from horuslib import *
