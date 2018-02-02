@@ -7,6 +7,14 @@
 #   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
 #   Released under GNU GPL v3 or later
 #
+#   NOTE:
+#   This requires the pygame-text helper module 'ptext.py', which you can get by running
+#   wget https://raw.githubusercontent.com/cosmologicon/pygame-text/master/ptext.py
+#
+#   It also obviously requires a Adafruit 2.8" PiTFT display, with all the associated setup.
+#   Because getting it running under the Rasbian Stretch is currently a nightmare (yay requirement for ancient SDL),
+#   I'm just using the Adafruit supplied image...
+#
 
 import os
 import time
@@ -68,6 +76,25 @@ pygame.display.update()
 def update_screen():
     ''' Re-draw all information onto the display '''
     lcd.fill((0,0,0))
+
+    # OziMux Data
+    ptext.draw("Telemetry via OziMux", (X_MAX/2,0), fontsize=20, bold=True, underline=True, surf=lcd)
+
+    _ozimux_str = ""
+    if len(OZIMUX_DATA.keys()) == 0:
+        _ozimux_str = "No Data."
+    else:
+        for _key in OZIMUX_DATA.keys():
+            _data_str = "%s \tAge: %.1f\n%.4f, %.4f, %d\n" % (_key, 
+                                                            (time.time() - OZIMUX_DATA[_key]['packet_time']),
+                                                            OZIMUX_DATA[_key]['latitude'], 
+                                                            OZIMUX_DATA[_key]['longitude'],
+                                                            OZIMUX_DATA[_key]['altitude'])
+                                                            
+            _ozimux_str += _data_str
+
+    ptext.draw(_ozimux_str, (X_MAX/2,20), fontsize=16, surf=lcd)
+
     # Last seen Packets.
     last_packets_str = "\n".join(LAST_PACKETS)
     ptext.draw(last_packets_str, (0,Y_MAX-20*3), fontsize=16, surf=lcd)
@@ -88,24 +115,6 @@ def update_screen():
     ptext.draw(LAST_WENET_GPS, (0,110), fontsize=16, surf=lcd)
     ptext.draw(LAST_WENET_TEXT, (0,126), fontsize=16, width=320, surf=lcd)
 
-
-    # OziMux Data
-    ptext.draw("Telemetry via OziMux", (X_MAX/2,0), fontsize=20, bold=True, underline=True, surf=lcd)
-
-    _ozimux_str = ""
-    if len(OZIMUX_DATA.keys()) == 0:
-        _ozimux_str = "No Data."
-    else:
-        for _key in OZIMUX_DATA.keys():
-            _data_str = "%s \tAge: %.1f\n%.4f, %.4f, %d\n" % (_key, 
-                                                            (time.time() - OZIMUX_DATA[_key]['packet_time']),
-                                                            OZIMUX_DATA[_key]['latitude'], 
-                                                            OZIMUX_DATA[_key]['longitude'],
-                                                            OZIMUX_DATA[_key]['altitude'])
-                                                            
-            _ozimux_str += _data_str
-
-    ptext.draw(_ozimux_str, (X_MAX/2,20), fontsize=16, surf=lcd)
 
     pygame.display.update()
 
