@@ -704,6 +704,9 @@ def udp_packet_to_string(udp_packet):
     elif pkt_type == "PAYLOAD_SUMMARY":
         timestamp = datetime.utcnow().isoformat()
         return "%s Payload Summary Status: %.5f, %.5f, %d" % (timestamp, udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'])
+    elif pkt_type == "OZIMUX":
+        timestamp = datetime.utcnow().isoformat()
+        return "%s OziMux Broadcast: Source = %s, Pos: %.5f, %.5f, %d, Comment: %s" % (timestamp, udp_packet['source_name'], udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'], udp_packet['comment'])
     elif pkt_type == "LOWPRIORITY":
         if 'payload' in udp_packet.keys():
             if udp_packet['payload'] == []:
@@ -749,3 +752,37 @@ def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, head
         s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error:
         s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+
+
+# A quick add-on which allows OziMux to broadcast everything it is seeing into the local network via broadcast
+# This is used for a 'launch check' device which hangs off the network and needs to see *all* traffic.
+def send_ozimux_broadcast_packet(source_name, latitude, longitude, altitude, short_time=None, comment=""):
+    packet = {
+        'type' : 'OZIMUX',
+        'source_name' : source_name,
+        'latitude' : latitude,
+        'longitude' : longitude,
+        'altitude' : altitude,
+        'comment' : comment
+    }
+
+    # Optionally add in a time field, which should always be of the form HH:MM:SS
+    if short_time != None:
+        packet['time'] = short_time
+
+    # Set up our UDP socket
+    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    s.settimeout(1)
+    # Set up socket for broadcast, and allow re-use of the address
+    s.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    except:
+        pass
+    s.bind(('',HORUS_UDP_PORT))
+    try:
+        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+    except socket.error:
+        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+

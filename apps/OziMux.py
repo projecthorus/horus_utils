@@ -41,11 +41,12 @@ class TelemetryListener(object):
                 source_name = "None",
                 oziplotter_host = "127.0.0.1",
                 oziplotter_port = 8942,
-                input_port = "55680",
+                input_port = 55680,
                 output_enabled = False,
                 summary_enabled = False,
                 pass_waypoints = True,
-                callback = None):
+                callback = None,
+                debug_output = True):
 
         self.source_name = source_name
         self.ozi_host = (oziplotter_host, oziplotter_port)
@@ -153,6 +154,23 @@ class TelemetryListener(object):
             traceback.print_exc()
 
 
+    def send_ozimux_broadcast(self, packet):
+        """
+        Attempt to parse the incoming packet into fields and send out an ozimux broadcast UDP message
+        """
+
+        try:
+            _fields = packet.split(',')
+            _short_time = _fields[1]
+            _lat = float(_fields[2])
+            _lon = float(_fields[3])
+            _alt = int(_fields[4])
+
+            send_ozimux_broadcast_packet(self.source_name, _lat, _lon, _alt, short_time=_short_time, comment="Via OziMux")
+        except:
+            traceback.print_exc()
+
+
     def handle_packet(self, packet):
         """
         Check an incoming packet matches a valid type, and then forward it on.
@@ -173,6 +191,9 @@ class TelemetryListener(object):
                 pass
 
         # Now send on the packet if we are allowed to.
+        if packet_type == "TELEMETRY":
+            self.send_ozimux_broadcast(packet)
+
         if packet_type == "TELEMETRY" and self.output_enabled:
             self.send_packet_to_ozi(packet)
 

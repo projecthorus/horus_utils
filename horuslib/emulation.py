@@ -2,7 +2,8 @@
 #
 # Horus Ground Station - Packet Emulation Utilities
 #
-# Copyright 2017 Mark Jessop <vk5qi@rfhead.net>
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
 #
 from .oziplotter import *
 import sys
