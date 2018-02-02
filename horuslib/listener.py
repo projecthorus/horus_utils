@@ -93,13 +93,17 @@ class UDPListener(object):
 
 if __name__ == '__main__':
     # Example script, essentially repeats functionality of PacketSniffer.py
-    import time
+    import time, sys
 
     def process_packet(packet):
         print(udp_packet_to_string(packet))
 
+    if len(sys.argv) > 1:
+        udp_port = int(sys.argv[1])
+    else:
+        udp_port = HORUS_UDP_PORT
 
-    udp_rx = UDPListener(callback=process_packet)
+    udp_rx = UDPListener(callback=process_packet, port=udp_port)
     udp_rx.start()
 
     try:

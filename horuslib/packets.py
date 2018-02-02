@@ -12,6 +12,7 @@ import socket
 import struct
 from datetime import datetime
 from . import *
+from .wenet import *
 
 MAX_JSON_LEN = 2048
 TX_QUEUE_SIZE = 32
@@ -707,6 +708,9 @@ def udp_packet_to_string(udp_packet):
     elif pkt_type == "OZIMUX":
         timestamp = datetime.utcnow().isoformat()
         return "%s OziMux Broadcast: Source = %s, Pos: %.5f, %.5f, %d, Comment: %s" % (timestamp, udp_packet['source_name'], udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'], udp_packet['comment'])
+    elif pkt_type == "WENET":
+        timestamp = datetime.utcnow().isoformat()
+        return "%s %s" % (timestamp, wenet_packet_to_string(udp_packet['packet']))
     elif pkt_type == "LOWPRIORITY":
         if 'payload' in udp_packet.keys():
             if udp_packet['payload'] == []:
