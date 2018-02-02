@@ -815,7 +815,7 @@ def process_udp(udp_packet):
         packet_dict = json.loads(udp_packet)
         
         # Avoid flooding the terminal with: Local GPS data, Control messages, Summary messages.
-        if packet_dict['type'] not in ['GPS','LOWPRIORITY','PAYLOAD_SUMMARY']:
+        if packet_dict['type'] not in ['GPS','LOWPRIORITY','PAYLOAD_SUMMARY', 'WENET', 'OZIMUX']:
             
             if (packet_dict['type'] == 'STATUS') and consoleInhibitStatus.isChecked():
                 pass
