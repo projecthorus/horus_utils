@@ -182,10 +182,12 @@ def decode_short_payload_telemetry(packet):
 #   uint8_t   PayloadFlags;
 #   uint8_t   PayloadIDs;
 #   uint16_t  Counter;
-#   uint16_t  BiSeconds;
-#   float   Latitude;
-#   float   Longitude;
-#   uint16_t    Altitude;
+#   uint8_t   Hour;  // Updated 2018-02-07
+#   uint8_t   Minute;
+#   uint8_t   Second;
+#   float     Latitude;
+#   float     Longitude;
+#   uint16_t  Altitude;
 #   uint8_t   Speed; // Speed in Knots (1-255 knots)
 #   uint8_t   Sats;
 #   uint8_t   Temp; // Twos Complement Temp value.
@@ -200,7 +202,7 @@ def decode_short_payload_telemetry(packet):
 def decode_horus_payload_telemetry(packet):
     packet = str(bytearray(packet))
 
-    horus_format_struct = "<BBBHHffHBBBBBBBB"
+    horus_format_struct = "<BBBHBBBffHBBBBBBBB"
     try:
         unpacked = struct.unpack(horus_format_struct, packet)
     except:
@@ -213,24 +215,27 @@ def decode_horus_payload_telemetry(packet):
     telemetry['payload_flags'] = unpacked[1]
     telemetry['payload_id'] = unpacked[2]
     telemetry['counter'] = unpacked[3]
-    telemetry['time_biseconds'] = unpacked[4]
-    telemetry['latitude'] = unpacked[5]
-    telemetry['longitude'] = unpacked[6]
-    telemetry['altitude'] = unpacked[7]
-    telemetry['speed'] = unpacked[8]
-    telemetry['sats'] = unpacked[9]
-    telemetry['temp'] = unpacked[10]
-    telemetry['batt_voltage_raw'] = unpacked[11]
-    telemetry['pyro_voltage_raw'] = unpacked[12]
-    telemetry['rxPktCount'] = unpacked[13]
-    telemetry['RSSI'] = unpacked[14]-164
-    telemetry['uplinkSlots'] = unpacked[15]
+    telemetry['hour'] = unpacked[4]
+    telemetry['minute'] = unpacked[5]
+    telemetry['second'] = unpacked[6]
+    telemetry['latitude'] = unpacked[7]
+    telemetry['longitude'] = unpacked[8]
+    telemetry['altitude'] = unpacked[9]
+    telemetry['speed'] = unpacked[10]
+    telemetry['sats'] = unpacked[11]
+    telemetry['temp'] = unpacked[12]
+    telemetry['batt_voltage_raw'] = unpacked[13]
+    telemetry['pyro_voltage_raw'] = unpacked[14]
+    telemetry['rxPktCount'] = unpacked[15]
+    telemetry['RSSI'] = unpacked[16]-164
+    telemetry['uplinkSlots'] = unpacked[17]
     # Uplink timeslot stuff.
-    telemetry['used_timeslots'] = (0xF0&unpacked[15])>>4 # High Nibble
-    telemetry['current_timeslot'] = (0x0F & unpacked[15]) # Low Nibble
+    telemetry['used_timeslots'] = (0xF0&unpacked[17])>>4 # High Nibble
+    telemetry['current_timeslot'] = (0x0F & unpacked[17]) # Low Nibble
 
     # Convert some of the fields into more useful units.
-    telemetry['time'] = time.strftime("%H:%M:%S", time.gmtime(telemetry['time_biseconds']*2))
+    telemetry['time'] = "%02d:%02d:%02d" % (telemetry['hour'],telemetry['minute'],telemetry['second'])
+    telemetry['seconds_in_day'] = telemetry['hour']*3600 + telemetry['minute']*60 + telemetry['second']
     telemetry['batt_voltage'] = 0.5 + 1.5*telemetry['batt_voltage_raw']/255.0
     telemetry['pyro_voltage'] = 5.0*telemetry['pyro_voltage_raw']/255.0
 

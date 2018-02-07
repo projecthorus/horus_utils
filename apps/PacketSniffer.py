@@ -10,7 +10,7 @@
 
 from horuslib import *
 from horuslib.packets import *
-import socket,json,sys,Queue
+import socket,json,sys,Queue,traceback
 
 udp_listener_running = False
 
@@ -21,6 +21,7 @@ def process_udp(udp_packet, address="0.0.0.0"):
         print(udp_packet_to_string(packet_dict))
         sys.stdout.flush()
     except:
+        traceback.print_exc()
         pass
 
 def udp_rx_thread():

@@ -760,11 +760,11 @@ def processPacket(packet):
         payloadOtherStatusUplinkValue.setText("%d/%d" % (telemetry['current_timeslot'],telemetry['used_timeslots']))
 
         # Calculate Speed
-        calculated_speed = speed_calc(lastlat,lastlon,telemetry['latitude'],telemetry['longitude'],telemetry['time_biseconds']*2 - lasttime)
+        calculated_speed = speed_calc(lastlat,lastlon,telemetry['latitude'],telemetry['longitude'],telemetry['seconds_in_day'] - lasttime)
         payloadStatusPacketSpeedValue.setText("%d kph" % int(calculated_speed))
         lastlat = telemetry['latitude']
         lastlon = telemetry['longitude']
-        lasttime = telemetry['time_biseconds']*2
+        lasttime = telemetry['seconds_in_day']
 
         if emit_payload_summary:
             send_payload_summary(callsign="Horus Ground Station", latitude=telemetry['latitude'], longitude=telemetry['longitude'], altitude=telemetry['altitude'], speed=calculated_speed, heading=-1, short_time = telemetry['time'])
