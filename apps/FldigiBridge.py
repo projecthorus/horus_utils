@@ -8,8 +8,14 @@
 #   Receive sentences from FlDigi, and pass them onto OziMux or OziPlotter.
 #   Sentences must be of the form $$CALLSIGN,count,HH:MM:SS,lat,lon,alt,other,fields*CRC16
 #
+#   Note: You can change the port fldigi listens on by using the command line option:
+#   --arq-server-port PORT
+#   i.e. ./dl-fldigi --hab --arq-server-port 7323
+#
+#   and then run this application with:
+#   python FldigiBridge.py --fldigi_port=7323
+#
 #   TODO:
-#   [ ] Accept host/port parameters via a config file.
 #   [ ] Better handling of connection timeouts.
 #   [ ] Display incoming data 'live'?
 #
@@ -17,6 +23,7 @@
 import socket
 import time
 import sys
+import argparse
 import Queue
 import crcmod
 from datetime import datetime
@@ -28,6 +35,8 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 
 FLDIGI_PORT = 7322
 FLDIGI_HOST = '127.0.0.1'
+OUTPUT_PORT = 55683
+OUTPUT_HOST = '127.0.0.1'
 
 class FldigiBridge(object):
     """
@@ -42,14 +51,14 @@ class FldigiBridge(object):
 
 
     def __init__(self,
-                output_hostname = '127.0.0.1',
+                output_host = '127.0.0.1',
                 output_port = 55683,
                 fldigi_host = FLDIGI_HOST,
                 fldigi_port = FLDIGI_PORT,
                 callback = None,
                 ):
 
-        self.output_hostname = output_hostname
+        self.output_hostname = output_host
         self.output_port = output_port
         self.fldigi_host = (fldigi_host, fldigi_port)
         self.callback = callback # Callback should accept a string, which is a valid sentence.
@@ -264,8 +273,19 @@ timer.start(100)
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fldigi_host", type=str, default=FLDIGI_HOST, help="dl-fldigi TCP interface hostname. (default=127.0.0.1)")
+    parser.add_argument("--fldigi_port", type=int, default=FLDIGI_PORT, help="dl-fldigi TCP interface port. (default=7322)")
+    parser.add_argument("--output_host", type=str, default=OUTPUT_HOST, help="OziMux destination hostname. (default=127.0.0.1)")
+    parser.add_argument("--output_port", type=int, default=OUTPUT_PORT, help="OziMux destination UDP port. (default=55683)")
+    args = parser.parse_args()
 
-    _fldigi = FldigiBridge(callback=data_callback)
+
+    _fldigi = FldigiBridge(callback=data_callback,
+                        fldigi_host=args.fldigi_host,
+                        fldigi_port=args.fldigi_port,
+                        output_host=args.output_host,
+                        output_port=args.output_port)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtWidgets.QApplication.instance().exec_()
