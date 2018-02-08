@@ -20,3 +20,6 @@ All the applications mentioned within this documentation are provided as Python 
 Related repositories include [radiosonde_auto_rx](https://github.com/projecthorus/radiosonde_auto_rx) (a source of payload telemetry data, in this case from radiosondes), and [OziPlotter](https://github.com/projecthorus/oziplotter) (for offline mapping of payload positions).
 
 Refer to the [wiki pages](https://github.com/projecthorus/horus_utils/wiki) for further documentation.
+
+## Changelog
+* 2018-02-08 - Main Telemetry packet format has been updated to use HH/MM/SS representation of time instead of 'bi-seconds'. All ground stations will need to be updated.
