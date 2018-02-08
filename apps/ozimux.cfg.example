@@ -10,27 +10,37 @@
 oziplotter_host = 127.0.0.1
 oziplotter_port = 8942
 
-# How many inputs do we have
+# How many inputs do we have (Note that we only support 4 inputs right now...)
 number_of_inputs = 4
+
+# Logging - Saves per-source telemetry data to log_directory
+enable_logging = True
+log_directory = ./log/
 
 # Input definitions.
 # Note that the enabled flag indicates the INITIAL state, which may be changed during runtime.
 [Input_0]
-input_name = Horus Ground Station (LoRa)
-input_port = 55680
+# A descriptive name, used on the OziMux GUI
+input_name = Fldigi Bridge
+# A short name, used in log filename.
+input_short_name = fldigi
+input_port = 55683
 enabled = True
 
 [Input_1]
-input_name = Fldigi Bridge
-input_port = 55683
+input_name = Horus Ground Station (LoRa)
+input_short_name = lora
+input_port = 55680
 enabled = False
 
 [Input_2]
 input_name = Radiosonde Auto RX
+input_short_name = sonde
 input_port = 55681
 enabled = False
 
 [Input_3]
 input_name = Habitat Bridge
+input_short_name = habitat
 input_port = 55682
 enabled = False

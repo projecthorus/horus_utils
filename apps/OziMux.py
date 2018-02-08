@@ -11,6 +11,7 @@
 import ConfigParser
 import socket
 import sys
+import os
 import time
 import traceback
 import logging
@@ -39,6 +40,7 @@ class TelemetryListener(object):
 
     def __init__(self,
                 source_name = "None",
+                source_short_name = "none",
                 oziplotter_host = "127.0.0.1",
                 oziplotter_port = 8942,
                 input_port = 55680,
@@ -46,15 +48,21 @@ class TelemetryListener(object):
                 summary_enabled = False,
                 pass_waypoints = True,
                 callback = None,
-                debug_output = True):
+                debug_output = True,
+                log_enabled = False,
+                log_path = "./log/"):
 
         self.source_name = source_name
+        self.source_short_name = source_short_name
         self.ozi_host = (oziplotter_host, oziplotter_port)
         self.input_port = input_port
         self.output_enabled = output_enabled
         self.summary_enabled = summary_enabled
         self.pass_waypoints = pass_waypoints
         self.callback = callback
+        self.log_enabled = log_enabled
+        self.log_file = None
+        self.log_path = log_path
 
         self.udp_listener_running = True
 
@@ -204,6 +212,21 @@ class TelemetryListener(object):
         if packet_type == "WAYPOINT" and self.pass_waypoints:
             self.send_packet_to_ozi(packet)
 
+        # Handle logging, if enabled.
+        if self.log_enabled:
+            # Create log file, if it doesn't exist
+            if self.log_file == None:
+                # Log file name is timestamp + source short name
+                # i.e. 20180201-010101_fldigi.log
+                _log_file_name = os.path.join(self.log_path, datetime.utcnow().strftime("%Y%m%d-%H%M%S") + "_%s.log"%self.source_short_name)
+                self.log_file = open(_log_file_name,'w')
+
+            # Each log entry is timestamped with the packet's received time.
+            _log_entry = "%s,%s,%s" % (datetime.utcnow().isoformat(), self.source_short_name, packet)
+            self.log_file.write(_log_entry)
+            self.log_file.flush()
+
+
 
 def read_config(filename="ozimux.cfg"):
     """
@@ -219,19 +242,23 @@ def read_config(filename="ozimux.cfg"):
 
     config_dict['number_of_inputs'] = config.getint("Global", "number_of_inputs")
 
+    config_dict['enable_logging'] = config.getboolean("Global", "enable_logging")
+    config_dict['log_directory'] = config.get("Global", "log_directory")
+
     config_dict['inputs'] = {}
 
     for n in range(config_dict['number_of_inputs']):
         input_name = config.get("Input_%d"%n, "input_name")
         input_port = config.getint("Input_%d"%n, "input_port")
         input_enabled = config.getboolean("Input_%d"%n, "enabled")
+        short_name = config.get("Input_%d"%n, "input_short_name")
 
         config_dict['inputs'][input_name] = {}
         config_dict['inputs'][input_name]['port'] = input_port
         config_dict['inputs'][input_name]['enabled_at_start'] = input_enabled
+        config_dict['inputs'][input_name]['source_short_name'] = short_name
 
     return config_dict
-
 
 
 
@@ -361,8 +388,13 @@ def telemetry_callback(input_name, packet):
 try:
     config = read_config("ozimux.cfg")
 except:
-    print("Could not read ozimux.cfg!")
-    sys.exit(1)
+    print("Error reading ozimux.cfg, trying to read default!")
+    # Revert to the example config file if we don't have a custom config file to read, or if read fails.
+    try:
+        config = read_config("ozimux.cfg.example")
+    except:
+        print("Could not read example config file!")
+        sys.exit(1)
 
 # Extract input names into a list, which we will iterate through.
 input_list = config['inputs'].keys()
@@ -377,12 +409,16 @@ listener_objects = []
 # Create Objects
 for n in range(num_inputs):
     _obj = TelemetryListener(source_name = input_list[n],
+                            source_short_name = config['inputs'][input_list[n]]['source_short_name'],
                             oziplotter_host = config['oziplotter_host'],
                             oziplotter_port = config['oziplotter_port'],
                             input_port = config['inputs'][input_list[n]]['port'],
                             output_enabled = config['inputs'][input_list[n]]['enabled_at_start'],
                             summary_enabled = config['inputs'][input_list[n]]['enabled_at_start'],
-                            callback = telemetry_callback)
+                            callback = telemetry_callback,
+                            log_enabled = config['enable_logging'],
+                            log_path = config['log_directory']
+                            )
 
     listener_objects.append(_obj)
 
