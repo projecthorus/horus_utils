@@ -218,7 +218,7 @@ class TelemetryListener(object):
             if self.log_file == None:
                 # Log file name is timestamp + source short name
                 # i.e. 20180201-010101_fldigi.log
-                _log_file_name = os.path.join(self.log_path, datetime.utcnow().strftime("%Y%m%d-%H%M%S") + "_%s.log"%self.source_short_name)
+                _log_file_name = os.path.join(self.log_path, datetime.utcnow().strftime("%Y%m%d-%H%M%S") + "_ozimux_%s.log"%self.source_short_name)
                 self.log_file = open(_log_file_name,'w')
 
             # Each log entry is timestamped with the packet's received time.

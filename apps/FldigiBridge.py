@@ -55,6 +55,7 @@ class FldigiBridge(object):
                 output_port = 55683,
                 fldigi_host = FLDIGI_HOST,
                 fldigi_port = FLDIGI_PORT,
+                log_file = "None",
                 callback = None,
                 ):
 
@@ -63,13 +64,23 @@ class FldigiBridge(object):
         self.fldigi_host = (fldigi_host, fldigi_port)
         self.callback = callback # Callback should accept a string, which is a valid sentence.
 
+        if log_file != "None":
+            self.log_file = open(log_file,'a')
+        else:
+            self.log_file = None
+
         # Start receive thread.
         self.rx_thread_running = True
         self.t = Thread(target=self.rx_thread)
         self.t.start()
 
+
     def close(self):
         self.rx_thread_running = False
+
+        if self.log_file is not None:
+            self.log_file.close()
+
 
     def rx_thread(self):
         """
@@ -125,6 +136,7 @@ class FldigiBridge(object):
 
         _s.close()
 
+
     def crc16_ccitt(self,data):
         """
         Calculate the CRC16 CCITT checksum of *data*.
@@ -149,6 +161,13 @@ class FldigiBridge(object):
         Attempt to process a line of data, and extract time, lat, lon and alt
         """
         try:
+            # If we have a log file open, write the data out to disk.
+            if self.log_file is not None:
+                # Append trailing LF, since we don't get passed that.
+                self.log_file.write(data)
+                # Immediately flush the file to disk.
+                self.log_file.flush()
+
             # Try and proceed through the following. If anything fails, we have a corrupt sentence.
             # Strip out any leading/trailing whitespace.
             data = data.strip()
@@ -252,6 +271,7 @@ def data_callback(data):
     global rxqueue
     rxqueue.put(data)
 
+
 def read_queue():
     global fldigiData, fldigiAge, rxqueue, data_age
     try:
@@ -266,6 +286,7 @@ def read_queue():
     data_age += 0.1
     fldigiAge.setText("Packet Data Age: %0.1fs" % data_age)
 
+
 # Start a timer to attempt to read a UDP packet every 100ms
 timer = QtCore.QTimer()
 timer.timeout.connect(read_queue)
@@ -278,6 +299,7 @@ if __name__ == "__main__":
     parser.add_argument("--fldigi_port", type=int, default=FLDIGI_PORT, help="dl-fldigi TCP interface port. (default=7322)")
     parser.add_argument("--output_host", type=str, default=OUTPUT_HOST, help="OziMux destination hostname. (default=127.0.0.1)")
     parser.add_argument("--output_port", type=int, default=OUTPUT_PORT, help="OziMux destination UDP port. (default=55683)")
+    parser.add_argument("--log", type=str, default="None", help="Optional log file. All new telemetry data is appened to this file.")
     args = parser.parse_args()
 
 
@@ -285,7 +307,8 @@ if __name__ == "__main__":
                         fldigi_host=args.fldigi_host,
                         fldigi_port=args.fldigi_port,
                         output_host=args.output_host,
-                        output_port=args.output_port)
+                        output_port=args.output_port,
+                        log_file=args.log)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtWidgets.QApplication.instance().exec_()
