@@ -9,6 +9,7 @@
 #   Released under GNU GPL v3 or later
 #
 import ConfigParser
+import argparse
 import socket
 import sys
 import os
@@ -384,11 +385,17 @@ def telemetry_callback(input_name, packet):
     rxqueue.put((input_name,packet))
 
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", type=str, default='ozimux.cfg', help="Configuration file. Default: ozimux.cfg")
+args = parser.parse_args()
+
+
 # Read in config file.
 try:
-    config = read_config("ozimux.cfg")
+    config = read_config(args.config)
 except:
-    print("Error reading ozimux.cfg, trying to read default!")
+    print("Error reading %s, trying to read default!" % args.config)
     # Revert to the example config file if we don't have a custom config file to read, or if read fails.
     try:
         config = read_config("ozimux.cfg.example")
