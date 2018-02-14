@@ -52,6 +52,39 @@ def habitat_upload_payload_telemetry(telemetry, payload_callsign = "HORUSLORA", 
         return (False,"Failed to upload to Habitat: %s" % (str(e)))
 
 
+def habitat_upload_sentence(sentence, callsign="N0CALL", timeout=4):
+
+    sentence_b64 = b64encode(sentence)
+
+    date = datetime.utcnow().isoformat("T") + "Z"
+
+    data = {
+        "type": "payload_telemetry",
+        "data": {
+            "_raw": sentence_b64
+            },
+        "receivers": {
+            callsign: {
+                "time_created": date,
+                "time_uploaded": date,
+                },
+            },
+    }
+    try:
+        c = httplib.HTTPConnection("habitat.habhub.org",timeout=timeout)
+        c.request(
+            "PUT",
+            "/habitat/_design/payload_telemetry/_update/add_listener/%s" % sha256(sentence_b64).hexdigest(),
+            json.dumps(data),  # BODY
+            {"Content-Type": "application/json"}  # HEADERS
+            )
+
+        response = c.getresponse()
+        return (True,"OK")
+    except Exception as e:
+        return (False,"Failed to upload to Habitat: %s" % (str(e)))
+
+
 # URL to the spacenear.us datanew.php script, which we use to grab a JSON blob of vehicle (payload) data.
 SPACENEARUS_DATANEW_URL = "https://spacenear.us/tracker/datanew.php?mode=%s&type=positions&format=json&max_positions=%d&position_id=0"
 SPACENEARUS_TIMEOUT = 10

@@ -31,6 +31,7 @@ import traceback
 from threading import Thread
 from horuslib import *
 from horuslib.oziplotter import *
+from horuslib.habitat import *
 from PyQt5 import QtGui, QtWidgets, QtCore
 
 FLDIGI_PORT = 7322
@@ -57,12 +58,16 @@ class FldigiBridge(object):
                 fldigi_port = FLDIGI_PORT,
                 log_file = "None",
                 callback = None,
+                habitat_call = 'N0CALL',
+                enable_habitat = False
                 ):
 
         self.output_hostname = output_host
         self.output_port = output_port
         self.fldigi_host = (fldigi_host, fldigi_port)
         self.callback = callback # Callback should accept a string, which is a valid sentence.
+        self.habitat_call = habitat_call
+        self.enable_habitat = enable_habitat
 
         if log_file != "None":
             self.log_file = open(log_file,'a')
@@ -148,7 +153,7 @@ class FldigiBridge(object):
 
 
     def send_to_callback(self, data):
-            ''' If we have been given a callback, send data do it. '''
+            ''' If we have been given a callback, send data to it. '''
             if self.callback !=  None:
                 try:
                     self.callback(data)
@@ -229,6 +234,11 @@ class FldigiBridge(object):
             # Send the telemetry information onto OziMux/OziPlotter.
             oziplotter_upload_basic_telemetry(_telem_dict, hostname=self.output_hostname, udp_port = self.output_port)
 
+            if self.enable_habitat:
+                (success, message) = habitat_upload_sentence("$$"+_sentence+'\n', callsign=self.habitat_call)
+                if not success:
+                    print("Failed to upload to Habitat: %s" % message)
+
         except:
             return
 
@@ -253,11 +263,9 @@ fldigiData = QtWidgets.QLabel("Not Connected.")
 fldigiData.setFont(QtGui.QFont("Courier New", 14, QtGui.QFont.Bold))
 fldigiAge = QtWidgets.QLabel("No Data Yet...")
 
-
 # Final layout of frames
 layout.addWidget(fldigiData)
 layout.addWidget(fldigiAge)
-
 
 mainwin = QtWidgets.QMainWindow()
 
@@ -266,6 +274,7 @@ mainwin.setWindowTitle("FlDigi Bridge")
 mainwin.setCentralWidget(main_widget)
 mainwin.resize(500,50)
 mainwin.show()
+
 
 def data_callback(data):
     global rxqueue
@@ -299,6 +308,8 @@ if __name__ == "__main__":
     parser.add_argument("--fldigi_port", type=int, default=FLDIGI_PORT, help="dl-fldigi TCP interface port. (default=7322)")
     parser.add_argument("--output_host", type=str, default=OUTPUT_HOST, help="OziMux destination hostname. (default=127.0.0.1)")
     parser.add_argument("--output_port", type=int, default=OUTPUT_PORT, help="OziMux destination UDP port. (default=55683)")
+    parser.add_argument("--enable_habitat", action='store_true', help="Enable uploading of telemetry sentences to Habitat")
+    parser.add_argument("--habitat_call", type=str, default="N0CALL", help="Callsign to use when uploading to Habitat.")
     parser.add_argument("--log", type=str, default="None", help="Optional log file. All new telemetry data is appened to this file.")
     args = parser.parse_args()
 
@@ -308,7 +319,9 @@ if __name__ == "__main__":
                         fldigi_port=args.fldigi_port,
                         output_host=args.output_host,
                         output_port=args.output_port,
-                        log_file=args.log)
+                        log_file=args.log,
+                        habitat_call=args.habitat_call,
+                        enable_habitat=args.enable_habitat)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtWidgets.QApplication.instance().exec_()
