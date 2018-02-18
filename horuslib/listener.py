@@ -241,6 +241,7 @@ class OziListener(object):
 
         except:
             print("ERROR: Error when handling packet.")
+            traceback.print_exc()
 
 
 if __name__ == '__main__':
