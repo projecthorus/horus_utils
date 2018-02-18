@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.0">
+<Document>
+<visibility>1</visibility>
+<NetworkLink>
+<name>Flight Data</name>
+<flyToView>0</flyToView>
+<Url><href>http://127.0.0.1:5000/</href>
+<refreshMode>onInterval</refreshMode>
+<refreshInterval>2</refreshInterval>
+<viewRefreshMode>never</viewRefreshMode>
+</Url>
+<refreshVisibility>1</refreshVisibility>
+</NetworkLink>
+</Document>
+</kml>

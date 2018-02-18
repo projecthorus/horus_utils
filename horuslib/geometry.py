@@ -7,8 +7,10 @@
 #
 import traceback
 import logging
+import fastkml
 import numpy as np
 from .atmosphere import *
+from .earthmaths import position_info
 from shapely.geometry import Point, LineString
 
 
@@ -21,27 +23,21 @@ class GenericTrack(object):
     The track history can be exported to a LineString using the to_line_string method.
     """
 
-    # Internal store of track history data.
-    # Data is stored as a list-of-lists, with elements of [datetime, lat, lon, alt, comment]
-    track_history = []
-
-    # Current state of the payload.
-    is_descending = False # Currently just set by a simple (ascent_rate < 0.0), may be smarter with this in the future.
-    ascent_rate = 0.0   # Averaged ascent rate. Set to zero initially.
-    landing_rate = 5.0  # Predicted descent rate. Only valid if is_descending == True
-                        # NOTE: The landing rate has a positive value, as that's what the cusf predictor needs.
-
-
-    # Averaging Settings
-    ASCENT_AVERAGING = 6 # Average over 6 samples
-
     def __init__(self,
         ascent_averaging = 6,
         landing_rate = 5.0):
         ''' Create a GenericTrack Object. '''
 
+        # Averaging rate.
         self.ASCENT_AVERAGING = ascent_averaging
+        # Payload state.
         self.landing_rate = landing_rate
+        self.ascent_rate = 0.0
+        self.is_descending = False
+
+        # Internal store of track history data.
+        # Data is stored as a list-of-lists, with elements of [datetime, lat, lon, alt, comment]
+        self.track_history = []
 
 
     def add_telemetry(self,data_dict):
@@ -81,7 +77,8 @@ class GenericTrack(object):
                 'alt'   : _latest_position[3],
                 'ascent_rate': self.ascent_rate,
                 'is_descending': self.is_descending,
-                'landing_rate': self.landing_rate
+                'landing_rate': self.landing_rate,
+                'heading': self.heading
             }
             return _state
 
@@ -92,7 +89,7 @@ class GenericTrack(object):
             return 0.0
         elif len(self.track_history) == 2:
             # Basic ascent rate case - only 2 samples.
-            _time_delta = (self.track_history[-1][0] - self.track_history[-2][0]).seconds
+            _time_delta = (self.track_history[-1][0] - self.track_history[-2][0]).total_seconds()
             _altitude_delta = self.track_history[-1][3] - self.track_history[-2][3]
             return _altitude_delta/_time_delta
 
@@ -101,16 +98,29 @@ class GenericTrack(object):
             _asc_rates = []
 
             for _i in range(-1*(_num_samples-1), 0):
-                _time_delta = (self.track_history[_i][0] - self.track_history[_i-1][0]).seconds
+                _time_delta = (self.track_history[_i][0] - self.track_history[_i-1][0]).total_seconds()
                 _altitude_delta = self.track_history[_i][3] - self.track_history[_i-1][3]
                 _asc_rates.append(_altitude_delta/_time_delta)
 
             return np.mean(_asc_rates)
 
+    def calculate_heading(self):
+        ''' Calculate the heading of the payload '''
+        if len(self.track_history) <= 1:
+            return 0.0
+        else:
+            _pos_1 = self.track_history[-2]
+            _pos_2 = self.track_history[-1]
+
+            _pos_info = position_info((_pos_1[1],_pos_1[2],_pos_1[3]), (_pos_2[1],_pos_2[2],_pos_2[3]))
+
+            return _pos_info['bearing']
+
 
     def update_states(self):
         ''' Update internal states based on the current data '''
         self.ascent_rate = self.calculate_ascent_rate()
+        self.heading = self.calculate_heading()
         self.is_descending = self.ascent_rate < 0.0
 
         if self.is_descending:
@@ -135,3 +145,135 @@ class GenericTrack(object):
 
         return LineString(_track_points.tolist())
 
+
+# Geometry-to-KML methods
+ns = '{http://www.opengis.net/kml/2.2}'
+
+def flight_path_to_linestring(flight_path):
+    ''' Convert a predicted flight path to a LineString geometry object '''
+
+    track_points = []
+    for _point in flight_path:
+        # Flight path array is in lat,lon,alt order, needs to be in lon,lat,alt
+        track_points.append([_point[2],_point[1],_point[3]])
+
+    return LineString(track_points)
+
+
+
+def flight_path_to_geometry(flight_path,
+    placemark_id="Flight Path ID",
+    name="Flight Path Name",
+    track_color="aaffffff",
+    poly_color="20000000",
+    track_width=2.0,
+    absolute = True,
+    extrude = True,
+    tessellate = True):
+    ''' Produce a fastkml geometry object from a flight path LineString (i.e. exported from above) '''
+
+    # Handle selection of absolute altitude mode
+    if absolute:
+        _alt_mode = 'absolute'
+    else:
+        _alt_mode = 'clampToGround'
+
+    # Define the Line and Polygon styles, which are used for the flight path, and the extrusions (if enabled)
+    flight_track_line_style = fastkml.styles.LineStyle(
+        ns=ns,
+        color=track_color,
+        width=track_width)
+
+    flight_extrusion_style = fastkml.styles.PolyStyle(
+        ns=ns,
+        color=poly_color)
+
+    flight_track_style = fastkml.styles.Style(
+        ns=ns,
+        styles=[flight_track_line_style, flight_extrusion_style])
+
+    # Generate the Placemark which will contain the track data.
+    flight_line = fastkml.kml.Placemark(
+        ns=ns,
+        id=placemark_id,
+        name=name,
+        styles=[flight_track_style])
+
+    # Add the track data to the Placemark
+    flight_line.geometry = fastkml.geometry.Geometry(
+        ns=ns,
+        geometry=flight_path,
+        altitude_mode=_alt_mode,
+        extrude=extrude,
+        tessellate=tessellate)
+
+    return flight_line
+
+
+
+def new_placemark(lat, lon, alt,
+    placemark_id="Placemark ID",
+    name="Placemark Name",
+    absolute = False,
+    icon = "http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png",
+    scale = 1.0,
+    heading = 0):
+    """ Generate a generic placemark object """
+
+    if absolute:
+        _alt_mode = 'absolute'
+    else:
+        _alt_mode = 'clampToGround'
+
+    flight_icon_style = fastkml.styles.IconStyle(
+        ns=ns, 
+        icon_href=icon, 
+        scale=scale,
+        heading=heading)
+
+    flight_style = fastkml.styles.Style(
+        ns=ns,
+        styles=[flight_icon_style])
+
+    flight_placemark = fastkml.kml.Placemark(
+        ns=ns, 
+        id=placemark_id,
+        name=name,
+        description="",
+        styles=[flight_style])
+
+    flight_placemark.geometry = fastkml.geometry.Geometry(
+        ns=ns,
+        geometry=Point(lon, lat, alt),
+        altitude_mode=_alt_mode)
+
+    return flight_placemark
+
+
+def generate_kml(geom_objects,
+                comment=""):
+    """ Generate a KML file from a list of geometry objects. """
+
+    kml_root = fastkml.kml.KML()
+    kml_doc = fastkml.kml.Document(
+        ns=ns,
+        name=comment)
+
+    if type(geom_objects) is not list:
+        geom_objects = [geom_objects]
+
+    for _flight in geom_objects:
+        kml_doc.append(_flight)
+
+    return kml_doc.to_string()
+
+
+
+def write_kml(geom_objects,
+                filename="output.kml",
+                comment=""):
+    """ Write out flight path geometry objects to a kml file. """
+
+    with open(filename,'w') as kml_file:
+        kml_file.write(generate_kml(geom_objects,comment))
+        kml_file.close()
