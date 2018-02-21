@@ -6,6 +6,7 @@ from dateutil.parser import parse
 from horuslib.listener import OziListener, UDPListener
 from horuslib.geometry import *
 from flask import Flask
+from threading import Thread
 app = Flask(__name__)
 
 # Objects which store our track data.
@@ -20,10 +21,15 @@ no_labels = False
 
 # Prediction Tracks
 _predictor = None # Predictor object, instantiated later on, if we are using the predictor.
+_run_abort_prediction = False
 burst_alt = 30000.0
 descent_rate = 5.0
+last_prediction = 0
+prediction_rate = 15
 _flight_prediction = []
+_flight_prediction_valid = False
 _abort_prediction = []
+_abort_prediction_valid = False
 
 # Generate a KML File based on the above datasets.
 @app.route('/')
@@ -49,7 +55,8 @@ def serve_kml():
                                             heading=_latest_payload_position['heading'])
         _payload_track_ls = flight_path_to_geometry(_payload_track.to_line_string(),
                                             name="Flight Path",
-                                            absolute=absolute_tracks)
+                                            absolute=absolute_tracks,
+                                            track_color="ab02ff00")
         _geom_data.append(_payload_placemark)
         _geom_data.append(_payload_track_ls)
 
@@ -69,7 +76,92 @@ def serve_kml():
         _geom_data.append(_car_placemark)
         _geom_data.append(_car_track_ls)
 
+
+    if _flight_prediction_valid:
+        _flight_pred_ls = flight_path_to_linestring(_flight_prediction)
+        _flight_pred_geom = flight_path_to_geometry(_flight_pred_ls,
+                                            name="Prediction",
+                                            absolute=absolute_tracks,
+                                            track_color="ab0073ff")
+        _geom_data.append(_flight_pred_geom)
+
+    if _abort_prediction_valid:
+        _abort_pred_ls = flight_path_to_linestring(_abort_prediction)
+        _abort_pred_geom = flight_path_to_geometry(_abort_pred_ls,
+                                            name="Abort Prediction",
+                                            absolute=absolute_tracks,
+                                            track_color="ab0009ff")
+        _geom_data.append(_abort_pred_geom)
+
     return generate_kml(_geom_data)
+
+
+def run_prediction():
+    ''' Run a Flight Path prediction '''
+    global _payload_track, descent_rate, burst_alt, _flight_prediction, _flight_prediction_valid, _run_abort_prediction
+    global _abort_prediction, _abort_prediction_valid
+    _current_pos = _payload_track.get_latest_state()
+
+    if _current_pos['is_descending']:
+        _desc_rate = _current_pos['landing_rate']
+    else:
+        _desc_rate = descent_rate
+
+    if _current_pos['alt'] > burst_alt:
+        _burst_alt = _current_pos['alt'] + 100
+    else:
+        _burst_alt = burst_alt
+
+    print("Running Predictor... ")
+    _pred_path = _predictor.predict(
+            launch_lat=_current_pos['lat'],
+            launch_lon=_current_pos['lon'],
+            launch_alt=_current_pos['alt'],
+            ascent_rate=_current_pos['ascent_rate'],
+            descent_rate=_desc_rate,
+            burst_alt=_burst_alt,
+            launch_time=_current_pos['time'],
+            descent_mode=_current_pos['is_descending'])
+
+    if len(_pred_path) > 1:
+        _flight_prediction = _pred_path
+        _flight_prediction_valid = True
+        print("Prediction Updated, %d points." % len(_pred_path))
+    else:
+        print("Prediction Failed.")
+
+    if _run_abort_prediction and (_current_pos['alt'] < burst_alt) and (_current_pos['is_descending'] == False):
+        print("Running Abort Prediction... ")
+        _pred_path = _predictor.predict(
+                launch_lat=_current_pos['lat'],
+                launch_lon=_current_pos['lon'],
+                launch_alt=_current_pos['alt'],
+                ascent_rate=_current_pos['ascent_rate'],
+                descent_rate=_desc_rate,
+                burst_alt=_current_pos['alt']+200,
+                launch_time=_current_pos['time'])
+
+        if len(_pred_path) > 1:
+            _abort_prediction = _pred_path
+            _abort_prediction_valid = True
+            print("Abort Prediction Updated, %d points." % len(_pred_path))
+        else:
+            print("Prediction Failed.")
+    else:
+        _abort_prediction_valid = False
+
+    # If have been asked to run an abort prediction, but we are descent, set the is_valid
+    # flag to false, so the abort prediction is not plotted.
+    if _run_abort_prediction and _current_pos['is_descending']:
+        _abort_prediction_valid == False
+
+
+def spawn_predictor():
+    global last_prediction, prediction_rate
+    if (time.time() - last_prediction) >= prediction_rate:
+        last_prediction = time.time()
+        pred_thread = Thread(target=run_prediction)
+        pred_thread.start()
 
 
 # These callbacks pass data on to the different GenericTrack objects, for plotting on demand.
@@ -107,9 +199,11 @@ def udp_listener_summary_callback(data):
         'alt'   :   _alt,
         'comment':  _comment
     }
-    
+
     _payload_track.add_telemetry(_payload_position_update)
     _payload_data_valid = True
+
+    spawn_predictor()
 
 
 def udp_listener_car_callback(data):
@@ -146,6 +240,8 @@ if __name__ == "__main__":
     parser.add_argument("--predict", action="store_true", help="Enable Flight Path Predictions.")
     parser.add_argument("--burst_alt", type=float, default=30000.0, help="Expected Burst Altitude.")
     parser.add_argument("--descent_rate", type=float, default=5.0, help="Expected Descent Rate (m/s)")
+    parser.add_argument("--abort", action="store_true", default=False, help="Run 'Abort' Predictions.")
+    parser.add_argument("--predict_rate", type=int, default=15, help="Run predictions every X seconds.")
     args = parser.parse_args()
 
     # Set some global variables
@@ -153,6 +249,8 @@ if __name__ == "__main__":
     no_labels = args.nolabels
     burst_alt = args.burst_alt
     descent_rate = math.fabs(args.descent_rate)
+    _run_abort_prediction = args.abort
+    prediction_rate = args.predict_rate
 
     # Start up OziMux Listener Callback, if enabled.
     if args.ozimux:
@@ -169,6 +267,15 @@ if __name__ == "__main__":
                                             gps_callback=udp_listener_car_callback)
 
     _broadcast_listener.start()
+
+    if args.predict:
+        try:
+            from cusfpredict.predict import Predictor
+            _predictor = Predictor(bin_path='./pred', gfs_path='./gfs')
+        except:
+            print("Loading Predictor failed.")
+            _predictor = None
+
 
     # Start the Flask application.
     app.run()
