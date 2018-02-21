@@ -2,6 +2,8 @@
 
 This folder contains code to display payload (and chase car!) position data in Google Earth, or anything else that can handle 'live' KML data.
 
+For this to run, you will need the horuslib library installed. Refer to the [Installation guide](https://github.com/projecthorus/horus_utils/wiki/1.-Dependencies-&-Installation).
+
 This is very much a work-in-progress, with much to be completed. For now, the following works:
 
 To listen for payload data from OziMux (i.e. on UDP:localhost:8942):
