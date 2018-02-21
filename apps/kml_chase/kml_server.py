@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import time, argparse, math
+import time, argparse, math, traceback
 from datetime import datetime
 from dateutil.parser import parse
 from horuslib.listener import OziListener, UDPListener
@@ -98,8 +98,12 @@ def serve_kml():
 
 def run_prediction():
     ''' Run a Flight Path prediction '''
-    global _payload_track, descent_rate, burst_alt, _flight_prediction, _flight_prediction_valid, _run_abort_prediction
+    global _predictor, _payload_track, descent_rate, burst_alt, _flight_prediction, _flight_prediction_valid, _run_abort_prediction
     global _abort_prediction, _abort_prediction_valid
+
+    if _predictor == None:
+        return
+
     _current_pos = _payload_track.get_latest_state()
 
     if _current_pos['is_descending']:
@@ -272,9 +276,10 @@ if __name__ == "__main__":
     if args.predict:
         try:
             from cusfpredict.predict import Predictor
-            _predictor = Predictor(bin_path=args.pred_binary, gfs_path='./gfs')
+            _predictor = Predictor(bin_path=args.predict_binary, gfs_path='./gfs')
         except:
             print("Loading Predictor failed.")
+            traceback.print_exc()
             _predictor = None
 
 
