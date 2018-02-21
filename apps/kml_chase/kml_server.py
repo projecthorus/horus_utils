@@ -238,10 +238,11 @@ if __name__ == "__main__":
     parser.add_argument("--clamp", action="store_false", default=True, help="Clamp all tracks to ground.")
     parser.add_argument("--nolabels", action="store_true", default=False, help="Inhibit labels on placemarks.")
     parser.add_argument("--predict", action="store_true", help="Enable Flight Path Predictions.")
-    parser.add_argument("--burst_alt", type=float, default=30000.0, help="Expected Burst Altitude.")
-    parser.add_argument("--descent_rate", type=float, default=5.0, help="Expected Descent Rate (m/s)")
-    parser.add_argument("--abort", action="store_true", default=False, help="Run 'Abort' Predictions.")
-    parser.add_argument("--predict_rate", type=int, default=15, help="Run predictions every X seconds.")
+    parser.add_argument("--predict_binary", type=str, default="./pred", help="Location of the CUSF predictor binary. Defaut = ./pred")
+    parser.add_argument("--burst_alt", type=float, default=30000.0, help="Expected Burst Altitude (m). Default = 30000")
+    parser.add_argument("--descent_rate", type=float, default=5.0, help="Expected Descent Rate (m/s, positive value). Default = 5.0")
+    parser.add_argument("--abort", action="store_true", default=False, help="Enable 'Abort' Predictions.")
+    parser.add_argument("--predict_rate", type=int, default=15, help="Run predictions every X seconds. Default = 15 seconds.")
     args = parser.parse_args()
 
     # Set some global variables
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     if args.predict:
         try:
             from cusfpredict.predict import Predictor
-            _predictor = Predictor(bin_path='./pred', gfs_path='./gfs')
+            _predictor = Predictor(bin_path=args.pred_binary, gfs_path='./gfs')
         except:
             print("Loading Predictor failed.")
             _predictor = None
