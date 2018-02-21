@@ -49,10 +49,11 @@ The following additional arguments can then be used:
                         Run predictions every X seconds. Default = 15 seconds.
 ```
 
-For example, to use kml_server to observe a typical radiosonde launch (using data via the payload summary messages), you would run:
+For example, to use kml_server to observe a typical radiosonde launch (using data emitted via the [payload summary messages](https://github.com/projecthorus/radiosonde_auto_rx/wiki/Configuration-Settings#payload-summary-output)), you would run:
 ```
 $ python kml_server.py --summary --predict --burst_alt=26000 --descent_rate=7.0
 ```
+
 
 A few notes:
  * The ascent rate is calculated automatically, and is an average of the last 6 positions.
