@@ -26,6 +26,7 @@ import sys
 import argparse
 import Queue
 import crcmod
+import ConfigParser
 from datetime import datetime
 import traceback
 from threading import Thread
@@ -242,6 +243,24 @@ class FldigiBridge(object):
         except:
             return
 
+def read_callsign(filename="defaults.cfg"):
+    """
+    Attempt to read in the users callsign from defaults.cfg.
+    """
+    config = ConfigParser.ConfigParser()
+    config.read(filename)
+
+    try:
+        _call = config.get("User", "callsign")
+    except:
+        print("Could not read defaults.cfg, using default callsign.")
+        _call = 'N0CALL'
+
+    return _call
+
+#
+# MAIN PROGRAM START
+#
 
 rxqueue = Queue.Queue(32)
 data_age = 0.0
@@ -262,10 +281,22 @@ main_widget.setLayout(layout)
 fldigiData = QtWidgets.QLabel("Not Connected.")
 fldigiData.setFont(QtGui.QFont("Courier New", 14, QtGui.QFont.Bold))
 fldigiAge = QtWidgets.QLabel("No Data Yet...")
+habitatEnable = QtWidgets.QCheckBox("Upload to Habitat")
+habitatEnable.setChecked(False)
+myCallsignLabel = QtWidgets.QLabel("<b>Callsign:</b>")
+myCallsignValue = QtWidgets.QLineEdit(read_callsign())
+myCallsignValue.setMaxLength(20)
+myCallsignValue.setFixedWidth(100)
+habitatStatus = QtWidgets.QLabel("No Data Yet...")
 
 # Final layout of frames
-layout.addWidget(fldigiData)
-layout.addWidget(fldigiAge)
+layout.addWidget(fldigiData,0,0,1,4)
+layout.addWidget(fldigiAge,1,0,1,4)
+layout.addWidget(myCallsignLabel,2,0,1,1)
+layout.addWidget(myCallsignValue,2,1,1,1)
+layout.addWidget(habitatEnable,2,2,1,1)
+layout.addWidget(habitatStatus,3,0,1,4)
+
 
 mainwin = QtWidgets.QMainWindow()
 
@@ -288,7 +319,20 @@ def read_queue():
         fldigiData.setText(packet)
         data_age = 0.0
 
+        # Habitat Upload
+        if packet.startswith('VALID: ') and habitatEnable.isChecked():
+            _sentence = packet.split("VALID: ")[1]
+
+            (success, message) = habitat_upload_sentence("$$"+_sentence+'\n', callsign=str(myCallsignValue.text()))
+            if success:
+                habitatStatus.setText("Uploaded data to Habitat at %s" % datetime.now().strftime("%H:%M:%S"))
+            else:
+                habitatStatus.setText(message)
+
+    except Queue.Empty:
+        pass
     except:
+        traceback.print_exc()
         pass
 
     # Update 'data age' text.
@@ -313,6 +357,11 @@ if __name__ == "__main__":
     parser.add_argument("--log", type=str, default="None", help="Optional log file. All new telemetry data is appened to this file.")
     args = parser.parse_args()
 
+    if args.enable_habitat:
+        habitatEnable.setChecked(True)
+
+    if args.habitat_call != "N0CALL":
+        myCallsignValue.setText(args.habitat_call)
 
     _fldigi = FldigiBridge(callback=data_callback,
                         fldigi_host=args.fldigi_host,
@@ -320,8 +369,8 @@ if __name__ == "__main__":
                         output_host=args.output_host,
                         output_port=args.output_port,
                         log_file=args.log,
-                        habitat_call=args.habitat_call,
-                        enable_habitat=args.enable_habitat)
+                        habitat_call="N0CALL", # Note that we now upload to habitat within the GUI thread, not in the FldigiBridge object.
+                        enable_habitat=False)
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtWidgets.QApplication.instance().exec_()
