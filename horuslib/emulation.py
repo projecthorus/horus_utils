@@ -6,6 +6,7 @@
 #   Released under GNU GPL v3 or later
 #
 from .oziplotter import *
+from .packets import send_payload_summary
 import sys
 import time
 import datetime
@@ -67,7 +68,8 @@ def read_telemetry_csv(filename,
 def emulate_telemetry(telemetry_array,
                     hostname = 'localhost',
                     port = HORUS_OZIPLOTTER_PORT,
-                    speed = 1.0
+                    speed = 1.0,
+                    summary=False
                     ):
     '''
     Use a telemetry array to emit a sequence of OziPlotter telemetry UDP messages,
@@ -117,6 +119,10 @@ def emulate_telemetry(telemetry_array,
             }
 
         _sentence = oziplotter_upload_basic_telemetry(_upload_telemetry, hostname = hostname, udp_port = port)
+
+        if summary:
+            send_payload_summary("TEST", _current_latitude, _current_longitude, _current_altitude, short_time=_current_datetime.strftime("%H:%M:%S"))
+
         print(_sentence)
 
 

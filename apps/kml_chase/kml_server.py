@@ -7,6 +7,8 @@ from horuslib.listener import OziListener, UDPListener
 from horuslib.geometry import *
 from flask import Flask
 from threading import Thread
+
+# Create flask app
 app = Flask(__name__)
 
 # Objects which store our track data.
@@ -32,7 +34,7 @@ _abort_prediction = []
 _abort_prediction_valid = False
 
 # Generate a KML File based on the above datasets.
-@app.route('/')
+@app.route('/track.kml')
 def serve_kml():
     ''' Generate a KML file, and pass it to the client '''
     global _payload_track, _payload_data_valid, _car_track, _car_data_valid
@@ -288,7 +290,7 @@ if __name__ == "__main__":
 
     # Clean up threads.
     try:
-        _listener.close()
         _broadcast_listener.close()
+        _listener.close()
     except:
         pass

@@ -5,7 +5,7 @@
 <NetworkLink>
 <name>Flight Data</name>
 <flyToView>0</flyToView>
-<Url><href>http://127.0.0.1:5000/</href>
+<Url><href>http://127.0.0.1:5000/track.kml</href>
 <refreshMode>onInterval</refreshMode>
 <refreshInterval>2</refreshInterval>
 <viewRefreshMode>never</viewRefreshMode>
