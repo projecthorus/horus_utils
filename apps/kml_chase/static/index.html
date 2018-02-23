@@ -1,0 +1,35 @@
+<html>
+<head>
+    <title>Payload Location</title>
+   
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet-realtime/2.1.1/leaflet-realtime.js'></script> 
+    <script language="javascript">
+
+    function init() {
+
+        var map = L.map('map'),
+            realtime = L.realtime('payload.json', {
+                interval: 2 * 1000
+            }).addTo(map),
+            prediction = L.realtime('prediction.json', {
+                interval: 2 * 1000
+            }).addTo(map);
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        realtime.once('update', function() {
+            map.fitBounds(realtime.getBounds(), {maxZoom: 10});
+        });
+
+      }
+    </script>
+
+</head>
+<body onLoad="javascript:init();">
+   <div id="map" style="height: 1000px"></div>
+</body>            
+</html>
