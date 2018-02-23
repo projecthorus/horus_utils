@@ -251,7 +251,8 @@ def new_placemark(lat, lon, alt,
 
 
 def generate_kml(geom_objects,
-                comment=""):
+                comment="",
+                kml_hack=True):
     """ Generate a KML file from a list of geometry objects. """
 
     kml_root = fastkml.kml.KML()
@@ -265,7 +266,14 @@ def generate_kml(geom_objects,
     for _flight in geom_objects:
         kml_doc.append(_flight)
 
-    return kml_doc.to_string()
+    kml_str = kml_doc.to_string()
+
+    # Remove all instances of kml: and :kml from the KML document, to allow it to parse correctly
+    # with the various JS-based XML parsers out there...
+    if kml_hack:
+        kml_str = kml_str.replace('kml:','').replace(':kml','')
+
+    return kml_str
 
 
 
