@@ -254,7 +254,6 @@ def read_config(filename="ozimux.cfg"):
 
     config_dict = {}
 
-    config_dict['oziplotter_host'] = config.get("Global", "oziplotter_host")
     config_dict['oziplotter_port'] = config.getint("Global", "oziplotter_port")
 
     config_dict['number_of_inputs'] = config.getint("Global", "number_of_inputs")
@@ -433,7 +432,6 @@ listener_objects = []
 for n in range(num_inputs):
     _obj = TelemetryListener(source_name = input_list[n],
                             source_short_name = config['inputs'][input_list[n]]['source_short_name'],
-                            oziplotter_host = config['oziplotter_host'],
                             oziplotter_port = config['oziplotter_port'],
                             input_port = config['inputs'][input_list[n]]['port'],
                             output_enabled = config['inputs'][input_list[n]]['enabled_at_start'],

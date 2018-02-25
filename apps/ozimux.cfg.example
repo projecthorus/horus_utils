@@ -7,7 +7,6 @@
 # Global Settings
 [Global]
 # Where do we output telemetry messages to
-oziplotter_host = 127.0.0.1
 oziplotter_port = 8942
 
 # How many inputs do we have (Note that we only support 4 inputs right now...)
