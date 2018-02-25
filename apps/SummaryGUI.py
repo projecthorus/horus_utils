@@ -12,6 +12,7 @@
 from horuslib import *
 from horuslib.packets import *
 from horuslib.earthmaths import *
+from horuslib.geometry import GenericTrack
 from threading import Thread
 from PyQt5 import QtGui, QtCore, QtWidgets
 from datetime import datetime
@@ -23,6 +24,8 @@ udp_listener_running = False
 
 # RX Message queue to avoid threading issues.
 rxqueue = Queue.Queue(16)
+
+payload_track = GenericTrack()
 
 # At what data age (Seconds) do we show a warning or error indication?
 PAYLOAD_DATA_WARN = 20.0
@@ -158,7 +161,7 @@ def calculate_az_el_range():
     
 
 def update_payload_stats(packet):
-    global payload_latitude, payload_longitude, payload_altitude, payload_lastdata, payload_data_age, altitudeValue, speedValue, ascrateValue, use_supplied_time
+    global payload_track, payload_latitude, payload_longitude, payload_altitude, payload_lastdata, payload_data_age, altitudeValue, speedValue, ascrateValue, use_supplied_time
     try:
         # Attempt to parse a timestamp from the supplied packet.
         try:
@@ -180,7 +183,16 @@ def update_payload_stats(packet):
         new_longitude = packet['longitude']
         new_altitude = packet['altitude']
 
-        ascent_rate = (new_altitude - payload_altitude)/time_diff
+        # Update the GenericTrack object with the latest position.
+        payload_track.add_telemetry({'time':packet_dt, 'lat':new_latitude, 'lon':new_longitude, 'alt': new_altitude})
+
+        # Grab the latest state out of the GenericTrack object, and extract the ascent rate from it.
+        _latest_state = payload_track.get_latest_state()
+        if _latest_state != None:
+            ascent_rate = _latest_state['ascent_rate']
+        else:
+            ascent_rate = 0.0
+
         speed = speed_calc(payload_latitude, payload_longitude, new_latitude, new_longitude, time_diff)
 
         # Update Displays.
