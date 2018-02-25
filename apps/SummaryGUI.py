@@ -183,8 +183,10 @@ def update_payload_stats(packet):
         new_longitude = packet['longitude']
         new_altitude = packet['altitude']
 
+        # Update the GenericTrack object with the latest position.
         payload_track.add_telemetry({'time':packet_dt, 'lat':new_latitude, 'lon':new_longitude, 'alt': new_altitude})
 
+        # Grab the latest state out of the GenericTrack object, and extract the ascent rate from it.
         _latest_state = payload_track.get_latest_state()
         if _latest_state != None:
             ascent_rate = _latest_state['ascent_rate']
