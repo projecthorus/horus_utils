@@ -56,6 +56,7 @@ class TelemetryListener(object):
         self.source_name = source_name
         self.source_short_name = source_short_name
         self.ozi_host = (oziplotter_host, oziplotter_port)
+        self.ozi_port = oziplotter_port
         self.input_port = input_port
         self.output_enabled = output_enabled
         self.summary_enabled = summary_enabled
@@ -134,16 +135,31 @@ class TelemetryListener(object):
         self.udp_listener_running = False
 
 
-    def send_packet_to_ozi(self, packet):
+    def send_packet_to_ozi(self, packet, broadcast=True):
         """
         Send a string to OziPlotter
         """
+
         try:
             ozisock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-            ozisock.sendto(packet,self.ozi_host)
+            if broadcast:
+                # Set up socket for broadcast, and allow re-use of the address
+                ozisock.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST,1)
+                ozisock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                try:
+                    ozisock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+                except:
+                    pass
+                ozisock.sendto(packet,('<broadcast>',self.ozi_port))
+            else:
+                # Otherwise, send to a user-defined hostname/port.
+                ozisock.sendto(packet,self.ozi_host)
+
             ozisock.close()
+            return packet
         except Exception as e:
-            print("ERROR: Failed to send to OziPlotter: %s" % e)
+            print("ERROR: Failed to send to Ozi: %s" % str(e))
+            return None
 
 
     def send_packet_summary(self, packet):
