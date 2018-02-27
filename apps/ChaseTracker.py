@@ -5,7 +5,7 @@
 #   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
 #   Released under GNU GPL v3 or later
 #
-import urllib2, json, ConfigParser, sys, time, serial, Queue, socket
+import urllib2, json, ConfigParser, sys, time, serial, Queue, socket, traceback
 from threading import Thread
 from base64 import b64encode
 from hashlib import sha256
@@ -22,7 +22,7 @@ update_rate = int(config.get("GPS","update_rate"))
 serial_port = config.get("GPS","serial_port")
 serial_baud = int(config.get("GPS","serial_baud"))
 speed_cap = int(config.get("GPS","speed_cap"))
-stationary = bool(config.get("User","stationary"))
+stationary = config.getboolean("User","stationary")
 
 # RX Message queue to avoid threading issues.
 rxqueue = Queue.Queue(16)
@@ -192,12 +192,12 @@ def postData(doc):
     habitatStatusLabel.setText("Posting doc to habitat\n%s" % json.dumps(doc, indent=2))
 
     req = urllib2.Request(url_habitat_db, data, headers)
-    return urllib2.urlopen(req).read()
+    return urllib2.urlopen(req, timeout=10).read()
 
 def fetch_uuids():
     while True:
         try:
-            resp = urllib2.urlopen(url_habitat_uuids % 10).read()
+            resp = urllib2.urlopen(url_habitat_uuids % 10, timeout=10).read()
             data = json.loads(resp)
         except urllib2.HTTPError, e:
             habitatStatusLabel.setText("Unable to fetch uuids. Retrying in 10 seconds...");
@@ -223,6 +223,7 @@ def init_callsign(callsign):
             break;
         except urllib2.HTTPError, e:
             habitatStatusLabel.setText("Unable initialize callsign. Retrying in 10 seconds...");
+            traceback.print_exc()
             time.sleep(10)
             continue
 
@@ -251,6 +252,7 @@ def uploadPosition():
         postData(doc)
     except urllib2.HTTPError, e:
         habitatStatusLabel.setText("Unable to upload data!")
+        traceback.print_exc()
         return
 
     habitatStatusLabel.setText("Uploaded Data at: %s" % ISOStringNow())
