@@ -75,6 +75,8 @@ class UDPListener(object):
                 m = self.s.recvfrom(MAX_JSON_LEN)
             except socket.timeout:
                 m = None
+            except:
+                traceback.print_exc()
             
             if m != None:
                 self.handle_udp_packet(m[0])
@@ -143,9 +145,11 @@ class OziListener(object):
         
         while self.udp_listener_running:
             try:
-                m = self.s.recvfrom(256)
+                m = self.s.recvfrom(1024)
             except socket.timeout:
                 m = None
+            except:
+                traceback.print_exc()
             
             if m != None:
                 try:

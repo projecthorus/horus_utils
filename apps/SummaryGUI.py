@@ -11,6 +11,7 @@
 
 from horuslib import *
 from horuslib.packets import *
+from horuslib.listener import UDPListener
 from horuslib.earthmaths import *
 from horuslib.geometry import GenericTrack
 from threading import Thread
@@ -19,8 +20,6 @@ from datetime import datetime
 import socket,json,sys,Queue,traceback,time,math
 
 
-udp_broadcast_port = HORUS_UDP_PORT
-udp_listener_running = False
 
 # RX Message queue to avoid threading issues.
 rxqueue = Queue.Queue(16)
@@ -240,10 +239,8 @@ def update_car_stats(packet):
         traceback.print_exc()
 
 # Method to process UDP packets.
-def process_udp(udp_packet):
+def process_udp(packet_dict):
     try:
-        packet_dict = json.loads(udp_packet)
-
         # TX Confirmation Packet?
         if packet_dict['type'] == 'PAYLOAD_SUMMARY':
             update_payload_stats(packet_dict)
@@ -257,30 +254,6 @@ def process_udp(udp_packet):
     except:
         traceback.print_exc()
         pass
-
-def udp_rx_thread():
-    global udp_listener_running
-    s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    s.settimeout(1)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    except:
-        pass
-    s.bind(('',HORUS_UDP_PORT))
-    print("Started UDP Listener Thread.")
-    udp_listener_running = True
-    while udp_listener_running:
-        try:
-            m = s.recvfrom(MAX_JSON_LEN)
-        except socket.timeout:
-            m = None
-        
-        if m != None:
-            rxqueue.put_nowait(m[0])
-    
-    print("Closing UDP Listener")
-    s.close()
 
 
 def read_queue():
@@ -311,6 +284,15 @@ def read_queue():
     else:
         statusValue2.setStyleSheet("background: green")
 
+
+def handle_listener_callback(packet):
+    ''' Place a packet straight onto the receive queue. If it's full, discard the packet. '''
+    try:
+        rxqueue.put_nowait(packet)
+    except:
+        pass
+
+
 # Start a timer to attempt to read the remote station status every 5 seconds.
 timer = QtCore.QTimer()
 timer.timeout.connect(read_queue)
@@ -319,7 +301,8 @@ timer.start(100)
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        t = Thread(target=udp_rx_thread)
-        t.start()
+        _udp_listener = UDPListener(callback=handle_listener_callback)
+        _udp_listener.start()
+
         QtWidgets.QApplication.instance().exec_()
-        udp_listener_running = False
+        _udp_listener.close()
