@@ -1,13 +1,22 @@
 #!/usr/bin/env python
+#
+# Horus Ground Station - KML / GeoJSON Server
+#
+#   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
+#   Released under GNU GPL v3 or later
+#
 
-import time, argparse, math, traceback
+import time, argparse, math, traceback, json
 from datetime import datetime
 from dateutil.parser import parse
 from horuslib.listener import OziListener, UDPListener
 from horuslib.geometry import *
+from shapely.geometry import Point, LineString, asShape, mapping
 from flask import Flask
 from threading import Thread
-app = Flask(__name__)
+
+# Create flask app
+app = Flask(__name__, static_url_path='')
 
 # Objects which store our track data.
 _payload_track = GenericTrack()
@@ -31,8 +40,60 @@ _flight_prediction_valid = False
 _abort_prediction = []
 _abort_prediction_valid = False
 
-# Generate a KML File based on the above datasets.
+
+# FLASK Server Functions
+# Route / to index.html in static/
 @app.route('/')
+def server_index():
+    return app.send_static_file('index.html')
+
+@app.route('/payload.json')
+def serve_geojson_payload():
+    ''' Generate a GeoJSON blob containing the track data '''
+    global _payload_track, _payload_data_valid
+
+    #return json.dumps({'features':[{'geometry':null, 'type':'Feature', 'properties':{'name':'Payload Track'}}]})
+
+    if _payload_data_valid == False:
+        return json.dumps({})
+
+    # Otherwise, compile a Feature containing the track and latest position.
+    _latest = _payload_track.get_latest_state()
+    _latest_point = Point(_latest['lon'], _latest['lat'], _latest['alt'])
+
+    _payload_mapping = mapping(_payload_track.to_line_string())
+
+    _features = {'features':[{  'geometry': mapping(_payload_track.to_line_string()),
+                                'type': 'Feature',
+                                'properties': {
+                                    'name': 'Payload Track'
+                                }}]}
+
+    return json.dumps(_features)
+
+@app.route('/prediction.json')
+def serve_geojson_prediction():
+    ''' Generate a GeoJSON blob containing the flight prediction data '''
+    global _flight_prediction, _flight_prediction_valid
+
+    if _flight_prediction_valid == False:
+        return json.dumps({})
+
+    # Otherwise, compile a Feature containing the track and latest position.
+    _pred_ls = flight_path_to_linestring(_flight_prediction)
+
+
+    _features = {'features':[{  'geometry': mapping(_pred_ls),
+                                'type': 'Feature',
+                                'properties': {
+                                    'name': 'Flight Prediction'
+                                }}]}
+
+    return json.dumps(_features)
+
+
+# On request, generate a KML File based on the above datasets.
+@app.route('/track.kml')
 def serve_kml():
     ''' Generate a KML file, and pass it to the client '''
     global _payload_track, _payload_data_valid, _car_track, _car_data_valid
@@ -105,6 +166,7 @@ def run_prediction():
         return
 
     _current_pos = _payload_track.get_latest_state()
+    _current_pos_list = [0,_current_pos['lat'], _current_pos['lon'], _current_pos['alt']]
 
     if _current_pos['is_descending']:
         _desc_rate = _current_pos['landing_rate']
@@ -128,6 +190,7 @@ def run_prediction():
             descent_mode=_current_pos['is_descending'])
 
     if len(_pred_path) > 1:
+        _pred_path.insert(0,_current_pos_list)
         _flight_prediction = _pred_path
         _flight_prediction_valid = True
         print("Prediction Updated, %d points." % len(_pred_path))
@@ -146,6 +209,7 @@ def run_prediction():
                 launch_time=_current_pos['time'])
 
         if len(_pred_path) > 1:
+            _pred_path.insert(0,_current_pos_list)
             _abort_prediction = _pred_path
             _abort_prediction_valid = True
             print("Abort Prediction Updated, %d points." % len(_pred_path))
@@ -288,7 +352,7 @@ if __name__ == "__main__":
 
     # Clean up threads.
     try:
-        _listener.close()
         _broadcast_listener.close()
+        _listener.close()
     except:
         pass

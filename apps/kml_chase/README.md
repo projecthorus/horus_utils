@@ -24,6 +24,7 @@ Other command-line options include:
   --nolabels            Inhibit labels on placemarks.
 ```
 
+The server can be stopped with CTRL+C.
 
 ## Live Predictions
 kml_server can also run live predictions of the flight path. 
@@ -58,6 +59,3 @@ $ python kml_server.py --summary --predict --burst_alt=26000 --descent_rate=7.0
 A few notes:
  * The ascent rate is calculated automatically, and is an average of the last 6 positions.
  * The 'Abort' prediction option is used to display a second prediction, which displays what would occur if the balloon burst *now*. This is useful for flights where you have a cutdown payload available, and want to know when to trigger it! This prediction disappears when the payload is either above the expected burst altitude, or is descending.
-
-
-NOTE: Currently the kml server application does not close with CTRL-C properly. You will have to manually kill the process to stop it.
