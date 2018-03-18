@@ -18,10 +18,17 @@ def handle_gps_data(packet):
     print(packet)
 
 
+def handle_all_packets(packet):
+    ''' Handle *all* packet types '''
+    # Just print the packet
+    print(packet)
+
+
 if __name__ == '__main__':
     
     # Instantiate the UDP listener.
     udp_rx = UDPListener(
+        callback = handle_all_packets,
         summary_callback = handle_payload_summary,
         gps_callback = handle_gps_data
         )

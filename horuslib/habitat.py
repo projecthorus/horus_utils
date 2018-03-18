@@ -52,7 +52,7 @@ def habitat_upload_payload_telemetry(telemetry, payload_callsign = "HORUSLORA", 
         return (False,"Failed to upload to Habitat: %s" % (str(e)))
 
 
-def habitat_upload_sentence(sentence, callsign="N0CALL", timeout=4):
+def habitat_upload_sentence(sentence, callsign="N0CALL", timeout=10):
 
     sentence_b64 = b64encode(sentence)
 
