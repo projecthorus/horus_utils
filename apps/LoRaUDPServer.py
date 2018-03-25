@@ -396,20 +396,20 @@ class LoRaTxRxCont(LoRa):
         # Transmit!
         tx_timestamp = datetime.utcnow().isoformat()
         #print(datetime.utcnow().isoformat())
-        self.clear_irq_flags()
+        self.set_irq_flags(tx_done=True) # 2018-03 - FIXED CLEARING OF TXDONE FLAG
         self.set_mode(MODE.TX)
         # Busy-wait until tx_done is raised.
         #print "Waiting for transmit to finish..."
         # For some reason, if we start reading the IRQ flags immediately, the TX can
         # abort prematurely. Dunno why yet.
-        time.sleep(self.tx_delay_fudge)
+        #time.sleep(self.tx_delay_fudge) # 2018-03 - REMOVED
         # Can probably fix this by, y'know, using interrupt lines properly.
         #while(self.get_irq_flags()["tx_done"]==False):
         while(self.BOARD.read_gpio()[0] == 0):
         #    print("Waiting..")
             pass
         #self.set_mode(MODE.STDBY)
-        self.clear_irq_flags()
+        self.set_irq_flags(tx_done=True) # 2018-03 - FIXED CLEARING OF TXDONE FLAG
         self.set_rx_mode()
         
         #print(datetime.utcnow().isoformat())
