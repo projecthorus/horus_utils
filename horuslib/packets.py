@@ -152,7 +152,7 @@ def decode_short_payload_telemetry(packet):
         unpacked = struct.unpack(horus_format_struct, packet)
     except:
         print "Wrong string length. Packet contents:"
-        print ":".join("{:02x}".format(ord(c)) for c in data)
+        print ":".join("{:02x}".format(ord(c)) for c in packet)
         return {}
 
     telemetry = {}
@@ -207,7 +207,7 @@ def decode_horus_payload_telemetry(packet):
         unpacked = struct.unpack(horus_format_struct, packet)
     except:
         print "Wrong string length. Packet contents:"
-        print ":".join("{:02x}".format(ord(c)) for c in data)
+        print ":".join("{:02x}".format(ord(c)) for c in packet)
         return {}
 
     telemetry = {}
@@ -564,9 +564,9 @@ def tx_packet(payload, blocking=False, timeout=4, destination=None, tx_timeout=1
         s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
 
     if blocking:
-        start_time = time() # Start time for our timeout.
+        start_time = time.time() # Start time for our timeout.
 
-        while (time()-start_time) < timeout:
+        while (time.time()-start_time) < timeout:
             try:
                 print("Waiting for UDP")
                 (m,a) = s.recvfrom(MAX_JSON_LEN)
