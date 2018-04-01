@@ -63,11 +63,42 @@ def getDensity(altitude):
 
 	return density
 
+
 def seaLevelDescentRate(descent_rate, altitude):
 	''' Calculate the descent rate at sea level, for a given descent rate at altitude '''
 
 	rho = getDensity(altitude)
 	return math.sqrt((rho / 1.22) * math.pow(descent_rate, 2))
+
+
+
+def time_to_landing(current_altitude, current_descent_rate=-5.0, ground_asl=0.0, step_size=1):
+	''' Calculate an estimated time to landing (in seconds) of a payload, based on its current altitude and descent rate '''
+
+	# A few checks on the input data.
+	if current_descent_rate > 0.0:
+		# If we are still ascending, return none.
+		return None
+
+	if current_altitude <= ground_asl:
+		# If the current altitude is *below* ground level, we have landed.
+		return 0
+
+	# Calculate the sea level descent rate.
+	_desc_rate = math.fabs(seaLevelDescentRate(current_descent_rate, current_altitude))
+	_drag_coeff = _desc_rate*1.1045 # Magic multiplier from predict.php
+
+
+	_alt = current_altitude
+	_start_time = 0
+	# Now step through the flight in <step_size> second steps.
+	# Once the altitude is below our ground level, stop, and return the elapsed time.
+	while _alt >= ground_asl:
+		_alt += step_size * -1*(_drag_coeff/math.sqrt(getDensity(_alt)))
+		_start_time += step_size
+
+
+	return _start_time
 
 
 if __name__ == '__main__':
@@ -79,4 +110,8 @@ if __name__ == '__main__':
 		print("Altitude: %d m,  Rate: %.2f m/s" % (_altitudes[i], _rates[i]))
 		print("Density: %.5f" % getDensity(_altitudes[i]))
 		print("Sea Level Descent Rate: %.2f m/s" % seaLevelDescentRate(_rates[i], _altitudes[i]))
+		_landing = time_to_landing(_altitudes[i],_rates[i])
+		_landing_min = _landing//60
+		_landing_sec = _landing%60
+		print("Time to landing: %d sec, %s:%s " % (_landing, _landing_min,_landing_sec))
 		print("")

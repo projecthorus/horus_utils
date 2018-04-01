@@ -13,6 +13,7 @@ from horuslib import *
 from horuslib.packets import *
 from horuslib.listener import UDPListener
 from horuslib.earthmaths import *
+from horuslib.atmosphere import time_to_landing
 from horuslib.geometry import GenericTrack
 from threading import Thread
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -93,6 +94,8 @@ statusValue1.setStyleSheet("background: green")
 statusValue2.setAutoFillBackground(True)
 statusValue2.setStyleSheet("background: green")
 
+timeToLanding = QtWidgets.QLabel("<font color='Black'><b>--:--</b></font>")
+timeToLanding.setFont(QtGui.QFont("Courier New", data_font_size, QtGui.QFont.Bold))
 
 # Lay Out Widgets
 layout.addWidget(altitudeLabel,0,0)
@@ -107,7 +110,8 @@ layout.addWidget(elevationLabel,1,2)
 layout.addWidget(elevationValue,1,3)
 layout.addWidget(rangeLabel,1,4)
 layout.addWidget(rangeValue,1,5)
-layout.addWidget(statusLabel1,2,0,1,2)
+layout.addWidget(timeToLanding,2,0,1,1)
+layout.addWidget(statusLabel1,2,1,1,1)
 layout.addWidget(statusValue1,2,2,1,1)
 layout.addWidget(statusLabel2,2,3,1,2)
 layout.addWidget(statusValue2,2,5,1,1)
@@ -160,7 +164,7 @@ def calculate_az_el_range():
     
 
 def update_payload_stats(packet):
-    global payload_track, payload_latitude, payload_longitude, payload_altitude, payload_lastdata, payload_data_age, altitudeValue, speedValue, ascrateValue, use_supplied_time
+    global payload_track, payload_latitude, payload_longitude, payload_altitude, payload_lastdata, payload_data_age, altitudeValue, speedValue, ascrateValue, timeToLanding, use_supplied_time
     try:
         # Attempt to parse a timestamp from the supplied packet.
         try:
@@ -191,6 +195,14 @@ def update_payload_stats(packet):
             ascent_rate = _latest_state['ascent_rate']
         else:
             ascent_rate = 0.0
+
+        if ascent_rate < 0.0:
+            _landing_time = time_to_landing(new_altitude, ascent_rate, car_altitude)
+            _landing_min = _landing_time//60
+            _landing_sec = _landing_time%60
+            timeToLanding.setText("<font color='Red'><b>%02d:%02d</b></font>" % (_landing_min,_landing_sec))
+        else:
+            timeToLanding.setText("<font color='Black'><b>--:--</b></font>")
 
         speed = speed_calc(payload_latitude, payload_longitude, new_latitude, new_longitude, time_diff)
 
