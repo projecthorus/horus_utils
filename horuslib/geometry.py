@@ -33,6 +33,8 @@ class GenericTrack(object):
         # Payload state.
         self.landing_rate = landing_rate
         self.ascent_rate = 5.0
+        self.heading = 0.0
+        self.speed = 0.0
         self.is_descending = False
 
         # Internal store of track history data.
@@ -78,7 +80,8 @@ class GenericTrack(object):
                 'ascent_rate': self.ascent_rate,
                 'is_descending': self.is_descending,
                 'landing_rate': self.landing_rate,
-                'heading': self.heading
+                'heading': self.heading,
+                'speed': self.speed
             }
             return _state
 
@@ -116,11 +119,27 @@ class GenericTrack(object):
 
             return _pos_info['bearing']
 
+    def calculate_speed(self):
+        """ Calculate Payload Speed in metres per second """
+        if len(self.track_history)<=1:
+            return 0.0
+        else:
+            _time_delta = (self.track_history[-1][0] - self.track_history[-2][0]).total_seconds()
+            _pos_1 = self.track_history[-2]
+            _pos_2 = self.track_history[-1]
+
+            _pos_info = position_info((_pos_1[1],_pos_1[2],_pos_1[3]), (_pos_2[1],_pos_2[2],_pos_2[3]))
+
+            _speed = _pos_info['great_circle_distance']/_time_delta
+
+            return _speed
+
 
     def update_states(self):
         ''' Update internal states based on the current data '''
         self.ascent_rate = self.calculate_ascent_rate()
         self.heading = self.calculate_heading()
+        self.speed = self.calculate_speed()
         self.is_descending = self.ascent_rate < 0.0
 
         if self.is_descending:

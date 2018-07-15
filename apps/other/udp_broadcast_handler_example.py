@@ -3,7 +3,7 @@
 # 2018-03-09 Mark Jessop <vk5qi@rfhead.net>
 #
 import time, datetime
-from horuslib.listener import UDPListener
+from horuslib.listener import OziListener, UDPListener
 
 # Exaple packet
 #{u'speed': -1, u'altitude': 12469, u'longitude': 139.23114, u'callsign': u'Radiosonde Auto RX', 
