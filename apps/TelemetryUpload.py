@@ -32,7 +32,7 @@ udp_listener_running = False
 parser = argparse.ArgumentParser()
 parser.add_argument("callsign", help="Listener Callsign")
 parser.add_argument("-l","--log_file",default="telemetry.log",help="Log file for RX Telemetry")
-parser.add_argument("--summary",default=False,action='store_true',help="Emit Payload Summary message via UDP broadcast on valid packet.")
+parser.add_argument("--summary",default=-1,type=int,help="Emit Payload Summary message on provided UDP broadcast on valid packet. Usual Horus UDP port is 55672.")
 args = parser.parse_args()
 
 # Read in payload callsign from config file.
@@ -64,16 +64,19 @@ def write_log_entry(packet):
     log.write(log_string)
     log.close()
 
-def emit_payload_summary(telemetry):
+def emit_payload_summary(telemetry, packet):
     """ Do some sanity checking on the telemetry, and then emit a a payload summary packet via UDP. """
     # send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, heading=-1)
-    _callsign = payload_callsign
+    _callsign = "LoRa Payload #%d" % telemetry['payload_id']
     _latitude = telemetry['latitude']
     _longitude = telemetry['longitude']
     _altitude = telemetry['altitude']
+    _short_time = telemetry['time']
+
+    _comment = "RSSI: %d, SNR:%d" % (int(packet['rssi']), int(packet['snr']))
 
     if (_latitude != 0.0) and (_longitude != 0.0):
-        send_payload_summary(_callsign, _latitude, _longitude, _altitude)
+        send_payload_summary(_callsign, _latitude, _longitude, _altitude, short_time=_short_time, comment=_comment, udp_port=args.summary)
 
 def process_udp(udp_packet):
     try:
@@ -95,8 +98,8 @@ def process_udp(udp_packet):
         if payload_type == HORUS_PACKET_TYPES.PAYLOAD_TELEMETRY:
             telemetry = decode_horus_payload_telemetry(payload)
             sentence = telemetry_to_sentence(telemetry, payload_callsign=payload_callsign, payload_id=telemetry['payload_id'])
-            if args.summary is True:
-                emit_payload_summary(telemetry)
+            if args.summary != -1:
+                emit_payload_summary(telemetry, packet)
             (success,error) = habitat_upload_payload_telemetry(telemetry, payload_callsign=payload_callsign, callsign=args.callsign)
             if success:
                 print("Uploaded Successfuly!")
@@ -112,6 +115,11 @@ def udp_rx_thread():
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     s.settimeout(1)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # OSX Hack.
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    except:
+        pass
     s.bind(('',HORUS_UDP_PORT))
     print("Started UDP Listener Thread.")
     udp_listener_running = True

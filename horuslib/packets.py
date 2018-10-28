@@ -731,7 +731,7 @@ def udp_packet_to_string(udp_packet):
 
 # Send an update on the core payload telemetry statistics into the network via UDP broadcast.
 # This can be used by other devices hanging off the network to display vital stats about the payload.
-def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, heading=-1, short_time=None):
+def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, heading=-1, comment=None, short_time=None, udp_port=HORUS_UDP_PORT):
     packet = {
         'type' : 'PAYLOAD_SUMMARY',
         'callsign' : callsign,
@@ -739,12 +739,15 @@ def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, head
         'longitude' : longitude,
         'altitude' : altitude,
         'speed' : speed,
-        'heading': heading,
+        'heading': heading
     }
 
     # Optionally add in a time field, which should always be of the form HH:MM:SS
     if short_time != None:
         packet['time'] = short_time
+
+    if comment != None:
+        packet['comment'] = comment
 
     # Set up our UDP socket
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -756,11 +759,11 @@ def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, head
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     except:
         pass
-    s.bind(('',HORUS_UDP_PORT))
+    s.bind(('',udp_port))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet), ('<broadcast>', udp_port))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet), ('127.0.0.1', udp_port))
 
 
 # A quick add-on which allows OziMux to broadcast everything it is seeing into the local network via broadcast

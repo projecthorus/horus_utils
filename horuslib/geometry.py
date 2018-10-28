@@ -165,6 +165,23 @@ class GenericTrack(object):
         return LineString(_track_points.tolist())
 
 
+    def to_polyline(self):
+        ''' Generate and return a Leaflet PolyLine compatible array '''
+        # Copy array into a numpy representation for easier slicing.
+        if len(self.track_history) == 0:
+            return []
+        elif len(self.track_history) == 1:
+            # LineStrings need at least 2 points. If we only have a single point,
+            # fudge it by duplicating the single point.
+            _track_data_np = np.array([self.track_history[0], self.track_history[0]])
+        else:
+            _track_data_np = np.array(self.track_history)
+        # Produce new array
+        _track_points = np.column_stack((_track_data_np[:,1], _track_data_np[:,2], _track_data_np[:,3]))
+
+        return _track_points.tolist()
+
+
 # Geometry-to-KML methods
 ns = '{http://www.opengis.net/kml/2.2}'
 
