@@ -76,7 +76,7 @@ def emit_payload_summary(telemetry, packet):
     _comment = "RSSI: %d, SNR:%d" % (int(packet['rssi']), int(packet['snr']))
 
     if (_latitude != 0.0) and (_longitude != 0.0):
-        send_payload_summary(_callsign, _latitude, _longitude, _altitude, short_time=_short_time, comment=_comment, udp_port=args.summary)
+        send_payload_summary(_callsign, _latitude, _longitude, _altitude, short_time=_short_time, snr=packet['snr'], comment=_comment, udp_port=args.summary)
 
 def process_udp(udp_packet):
     try:

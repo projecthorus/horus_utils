@@ -731,7 +731,7 @@ def udp_packet_to_string(udp_packet):
 
 # Send an update on the core payload telemetry statistics into the network via UDP broadcast.
 # This can be used by other devices hanging off the network to display vital stats about the payload.
-def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, heading=-1, comment=None, short_time=None, udp_port=HORUS_UDP_PORT):
+def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, heading=-1, comment=None, short_time=None, snr=-255.0, udp_port=HORUS_UDP_PORT):
     packet = {
         'type' : 'PAYLOAD_SUMMARY',
         'callsign' : callsign,
@@ -739,7 +739,8 @@ def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, head
         'longitude' : longitude,
         'altitude' : altitude,
         'speed' : speed,
-        'heading': heading
+        'heading': heading,
+        'snr': snr
     }
 
     # Optionally add in a time field, which should always be of the form HH:MM:SS
