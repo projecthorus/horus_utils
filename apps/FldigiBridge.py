@@ -208,10 +208,19 @@ class FldigiBridge(object):
             # Perform some sanity checks on the data.
 
             # Attempt to parse the time string. This will throw an error if any values are invalid.
-            try:
-                _time_dt = datetime.strptime(_telem_dict['time'], "%H:%M:%S")
-            except:
-                self.send_to_callback("ERROR - Invalid Time.")
+            if ":" in _telem_dict['time']:
+                try:
+                    _time_dt = datetime.strptime(_telem_dict['time'], "%H:%M:%S")
+                except:
+                    self.send_to_callback("ERROR - Invalid Time.")
+            else:
+                try:
+                    _time_dt = datetime.strptime(_telem_dict['time'], "%H%M%S")
+                except:
+                    self.send_to_callback("ERROR - Invalid Time.")
+            
+            # Convert the extracted time back to HH:MM:SS Format
+            _telem_dict['time'] = _time_dt.strftime("%H:%M:%S")
 
             # Check if the lat/long is 0.0,0.0 - no point passing this along.
             if _telem_dict['latitude'] == 0.0 or _telem_dict['longitude'] == 0.0:
