@@ -1,6 +1,26 @@
 Project Horus - Ground Station & Chase Car Utilities for High Altitude Balloon Tracking
 =======================================================================================
 
+
+**WARNING: As of July 2020, this repository is in maintenance mode, with fixes only being applied as required to make critical bits of software work under modern systems (e.g. with Python 3). Much of the repository will be in a broken state as Python 3 compatibility is added.**
+
+### Setup Info
+```console
+$ git checkout python3
+$ python3 -m venv venv
+$ . venv/bin/activate
+$ pip install -r requirements.txt
+$ pip install PyQt5   (If you are wanting to use GUIs)
+$ pip install -e .
+```
+
+Known working applications:
+* PacketSniffer.py
+* HorusGroundStation.py
+
+
+## Old Info
+
 This repository contains various libraries & utilities used for:
 
 * Routing of payload telemetry data from various data sources into the [OziPlotter offline mapping & prediction system.](https://github.com/projecthorus/oziplotter)
