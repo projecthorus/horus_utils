@@ -96,12 +96,12 @@ def create_text_message_packet(source="N0CALL", message="CQ CQ CQ", destination=
     if len(source)<8:
         source = source + "\x00"*(8-len(source))
 
-    packet = [HORUS_PACKET_TYPES.TEXT_MESSAGE,0,destination] + list(bytearray(source)) + list(bytearray(message))
+    packet = [HORUS_PACKET_TYPES.TEXT_MESSAGE,0,destination] + list(bytearray(source.encode('ascii'))) + list(bytearray(message.encode('ascii')))
     return packet
 
 def read_text_message_packet(packet):
     # Convert packet into a string, if it isn't one already.
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
     source = packet[3:10].rstrip(' \t\r\n\0')
     message = packet[11:].rstrip('\n\0')
     return (source,message)
@@ -145,14 +145,14 @@ def read_ssdv_packet_info(packet):
 # };  //  __attribute__ ((packed));
 
 def decode_short_payload_telemetry(packet):
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
 
     horus_format_struct = "<BBBBBffBBB"
     try:
         unpacked = struct.unpack(horus_format_struct, packet)
     except:
-        print "Wrong string length. Packet contents:"
-        print ":".join("{:02x}".format(ord(c)) for c in packet)
+        print("Wrong string length. Packet contents:")
+        print(":".join("{:02x}".format(ord(c)) for c in packet))
         return {}
 
     telemetry = {}
@@ -200,14 +200,14 @@ def decode_short_payload_telemetry(packet):
 
 
 def decode_horus_payload_telemetry(packet):
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
 
     horus_format_struct = "<BBBHBBBffHBBBBBBBB"
     try:
         unpacked = struct.unpack(horus_format_struct, packet)
     except:
-        print "Wrong string length. Packet contents:"
-        print ":".join("{:02x}".format(ord(c)) for c in packet)
+        print("Wrong string length. Packet contents:")
+        print(":".join("{:02x}".format(ord(c)) for c in packet))
         return {}
 
     telemetry = {}
@@ -249,7 +249,7 @@ def telemetry_to_sentence(telemetry, payload_callsign="HORUSLORA", payload_id = 
         telemetry['longitude'],telemetry['altitude'],telemetry['speed'],telemetry['sats'],telemetry['batt_voltage'],
         telemetry['pyro_voltage'],telemetry['RSSI'],telemetry['rxPktCount'])
 
-    checksum = crc16_ccitt(sentence[2:])
+    checksum = crc16_ccitt(sentence[2:].encode('ascii'))
     output = sentence + "*" + checksum + "\n"
     return output
 
@@ -267,13 +267,13 @@ def crc16_ccitt(data):
 def decode_command_ack(packet):
     packet = list(bytearray(packet))
     if len(packet) != 8:
-        print "Invalid length for Command ACK."
+        print("Invalid length for Command ACK.")
         return {}
 
     ack_packet = {}
     ack_packet['payload_id'] = packet[2]
     ack_packet['rssi'] = packet[3] - 164
-    ack_packet['snr'] = struct.unpack('b',str(bytearray([packet[4]])))[0]/4.
+    ack_packet['snr'] = struct.unpack('b',bytes(bytearray([packet[4]])))[0]/4.
     if packet[5] == HORUS_PACKET_TYPES.CUTDOWN_COMMAND:
         ack_packet['command'] = "Cutdown"
         ack_packet['argument'] = "%d Seconds." % packet[6]
@@ -359,13 +359,13 @@ def create_car_telemetry_packet(destination=0,callsign="N0CALL", latitude=-34.5,
         speed)
 
     # Add on capped-length message field at end.
-    telem_packet += message
+    telem_packet += message.encode('ascii')
 
     return telem_packet
 
 CAR_TELEMETRY_BODY_LENGTH = 21
 def decode_car_telemetry_packet(packet):
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
 
     if len(packet) < (CAR_TELEMETRY_BODY_LENGTH+1):
         print("Wrong string length")
@@ -480,9 +480,9 @@ def update_low_priority_settings(callsign="blank", destination=-1):
         pass
     s.bind(('',HORUS_UDP_PORT))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', HORUS_UDP_PORT))
 
 # Resets the uplink slot ID on the ground station, triggering an uplink slot request, if we
 # already had a slot. Otherwise, does nothing.
@@ -504,9 +504,9 @@ def reset_low_priority_slot():
         pass
     s.bind(('',HORUS_UDP_PORT))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', HORUS_UDP_PORT))
 
 # Updates the payload stored in the low priority packet buffer.
 # This is what is uplinked in the low priority packet slot.
@@ -528,9 +528,9 @@ def set_low_priority_payload(payload):
         pass
     s.bind(('',HORUS_UDP_PORT))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', HORUS_UDP_PORT))
 
 # Transmit packet via UDP Broadcast
 def tx_packet(payload, blocking=False, timeout=4, destination=None, tx_timeout=15):
@@ -558,10 +558,10 @@ def tx_packet(payload, blocking=False, timeout=4, destination=None, tx_timeout=1
         pass
     s.bind(('',HORUS_UDP_PORT))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error as e:
         print(str(e))
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', HORUS_UDP_PORT))
 
     if blocking:
         start_time = time.time() # Start time for our timeout.
@@ -575,7 +575,7 @@ def tx_packet(payload, blocking=False, timeout=4, destination=None, tx_timeout=1
             
             if m != None:
                 try:
-                    packet = json.loads(m)
+                    packet = json.loads(m.decode('ascii'))
                     if packet['type'] == 'TXDONE':
                         if packet['payload'] == list(bytearray(payload)):
                             print("Packet Transmitted Successfuly!")
@@ -762,9 +762,9 @@ def send_payload_summary(callsign, latitude, longitude, altitude, speed=-1, head
         pass
     s.bind(('',udp_port))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', udp_port))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', udp_port))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', udp_port))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', udp_port))
 
 
 # A quick add-on which allows OziMux to broadcast everything it is seeing into the local network via broadcast
@@ -795,7 +795,7 @@ def send_ozimux_broadcast_packet(source_name, latitude, longitude, altitude, sho
         pass
     s.bind(('',HORUS_UDP_PORT))
     try:
-        s.sendto(json.dumps(packet), ('<broadcast>', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('<broadcast>', HORUS_UDP_PORT))
     except socket.error:
-        s.sendto(json.dumps(packet), ('127.0.0.1', HORUS_UDP_PORT))
+        s.sendto(json.dumps(packet).encode('ascii'), ('127.0.0.1', HORUS_UDP_PORT))
 

@@ -10,7 +10,8 @@
 
 from horuslib import *
 from horuslib.packets import *
-import socket,json,sys,Queue,traceback
+import socket,json,sys,traceback
+from queue import Queue
 
 udp_listener_running = False
 
@@ -44,7 +45,7 @@ def udp_rx_thread():
             m = None
         
         if m != None:
-                process_udp(m)
+                process_udp(m.decode('ascii'))
     
     print("Closing UDP Listener")
     s.close()

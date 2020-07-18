@@ -42,9 +42,10 @@ class ROTCTLD(object):
         """ Send a command to the connected rotctld instance,
             and return the return value.
         """
-        self.sock.sendall(command+'\n')
+        command = command.encode('ascii')
+        self.sock.sendall(command+b'\n')
         try:
-            return self.sock.recv(1024)
+            return self.sock.recv(1024).decode('ascii')
         except:
             return None
 
@@ -133,7 +134,7 @@ class PSTRotator(object):
         logging.debug("Sent command: %s" % pst_command)
         # Send!
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.sendto(pst_command, (self.hostname,self.port))
+        udp_socket.sendto(pst_command.encode('ascii'), (self.hostname,self.port))
         udp_socket.close()
 
         return True
@@ -144,9 +145,9 @@ class PSTRotator(object):
         el_poll_command = "<PST>EL?</PST>"
         try:
             udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            udp_socket.sendto(az_poll_command, (self.hostname,self.port))
+            udp_socket.sendto(az_poll_command.encode('ascii'), (self.hostname,self.port))
             time.sleep(0.2)
-            udp_socket.sendto(el_poll_command, (self.hostname,self.port))
+            udp_socket.sendto(el_poll_command.encode('ascii'), (self.hostname,self.port))
             udp_socket.close()
         except:
             pass
@@ -173,7 +174,7 @@ class PSTRotator(object):
                 # Attempt to parse Azimuth / Elevation
                 logging.debug("Received: %s" % m[0])
 
-                data = m[0]
+                data = m[0].decode('ascii')
                 if data[:2] == 'EL':
                     self.current_elevation = float(data[3:])
                 elif data[:2] == 'AZ':

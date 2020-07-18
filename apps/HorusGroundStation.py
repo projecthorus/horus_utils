@@ -12,8 +12,10 @@ from horuslib.oziplotter import *
 from threading import Thread
 from PyQt5 import QtGui, QtWidgets, QtCore
 from datetime import datetime
-import socket,json,sys,Queue,random,os,math,traceback,random
-import ConfigParser
+import socket,json,sys,random,os,math,traceback,random
+from configparser import RawConfigParser
+
+from queue import Queue
 
 udp_broadcast_port = HORUS_UDP_PORT
 udp_listener_running = False
@@ -25,7 +27,7 @@ groundstation_log = "groundstation.log"
 
 # Message queues to avoid threading issues.
 RX_QUEUE_SIZE = 32
-rxqueue = Queue.Queue(RX_QUEUE_SIZE)
+rxqueue = Queue(RX_QUEUE_SIZE)
 txed_packets = []
 
 # PyQt Window Setup
@@ -447,13 +449,13 @@ def foxtrot_update(telemetry):
     f_log.write(append_line)
     f_log.close()
     # Now notify FoxTrotGPS to update
-    f_log_filename = os.path.abspath(foxtrot_log)
+    f_log_filename = os.path.abspath(foxtrot_log).encode('ascii')
     try:
         foxsock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         foxsock.sendto(f_log_filename,("127.0.0.1",21234))
         foxsock.close()
     except Exception as e:
-        print("Failed to request FoxTrotGPS Update: " % e)
+        print("Failed to request FoxTrotGPS Update: " % str(e))
 
 
 # Car Telemetry Data Frame
@@ -572,7 +574,7 @@ def auto_beacon_time():
 
 # Now attempt to read in a config file to preset various parameters.
 try:
-    config = ConfigParser.ConfigParser()
+    config = RawConfigParser()
     config.read('defaults.cfg')
     callsign = config.get('User','callsign')
     myCallsignValue.setText(callsign)
@@ -812,7 +814,7 @@ def processPacket(packet):
 def process_udp(udp_packet):
     global mylat, mylon, myspeed, current_payload, console, consoleInhibitStatus, lowpriFrameSlotValue, lowpriGPSValue, lowpriFrameMessage, myCallsignValue, my_slot_id
     try:
-        packet_dict = json.loads(udp_packet)
+        packet_dict = json.loads(udp_packet.decode('ascii'))
         
         # Avoid flooding the terminal with: Local GPS data, Control messages, Summary messages.
         if packet_dict['type'] not in ['GPS','LOWPRIORITY','PAYLOAD_SUMMARY', 'WENET', 'OZIMUX']:

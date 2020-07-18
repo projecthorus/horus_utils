@@ -18,6 +18,8 @@ def oziplotter_upload_basic_telemetry(telemetry, hostname="127.0.0.1", udp_port 
     ''' Send a 'Telemetry' sentence to OziPlotter. '''
     sentence = "TELEMETRY,%s,%.5f,%.5f,%d\n" % (telemetry['time'],telemetry['latitude'], telemetry['longitude'],telemetry['altitude'])
 
+    sentence = sentence.encode('ascii')
+
     try:
         ozisock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         if broadcast:
@@ -42,6 +44,8 @@ def oziplotter_upload_basic_telemetry(telemetry, hostname="127.0.0.1", udp_port 
 # Push a car waypoint into OziPlotter. Could be used for other waypoints too.
 def oziplotter_upload_car_telemetry(car_telem, hostname="127.0.0.1", udp_port = HORUS_OZIPLOTTER_PORT, broadcast=True):
     sentence = "WAYPOINT,%s,%.5f,%.5f,%s\n" % (car_telem['callsign'], car_telem['latitude'], car_telem['longitude'], car_telem['message'])
+
+    sentence = sentence.encode('ascii')
 
     try:
         ozisock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)

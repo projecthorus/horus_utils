@@ -38,7 +38,7 @@ class UDPListener(object):
     def handle_udp_packet(self, packet):
         ''' Process a received UDP packet '''
         try:
-            packet_dict = json.loads(packet)
+            packet_dict = json.loads(packet.decode('ascii'))
 
             if self.callback is not None:
                 self.callback(packet_dict)
@@ -153,7 +153,7 @@ class OziListener(object):
             
             if m != None:
                 try:
-                    self.handle_packet(m[0])
+                    self.handle_packet(m[0].decode('ascii'))
                 except:
                     traceback.print_exc()
                     print("ERROR: Couldn't handle packet correctly.")

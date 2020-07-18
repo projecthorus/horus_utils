@@ -6,5 +6,7 @@
 #	Released under GNU GPL v3 or later
 #
 
+__version__ = "1.0.0"
+
 # Network Settings
 HORUS_UDP_PORT = 55672

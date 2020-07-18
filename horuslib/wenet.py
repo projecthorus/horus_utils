@@ -9,7 +9,6 @@ import struct
 import traceback
 from datetime import datetime, timedelta
 import crcmod
-import httplib
 import json
 from hashlib import sha256
 from base64 import b64encode
