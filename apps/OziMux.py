@@ -8,7 +8,6 @@
 #   Copyright (C) 2018  Mark Jessop <vk5qi@rfhead.net>
 #   Released under GNU GPL v3 or later
 #
-import ConfigParser
 import argparse
 import socket
 import sys
@@ -16,14 +15,15 @@ import os
 import time
 import traceback
 import logging
-import Queue
+from queue import Queue
 from threading import Thread
 from PyQt5 import QtGui, QtCore, QtWidgets
 from horuslib import *
 from horuslib.packets import *
+from configparser import RawConfigParser
 
 # RX Message queue to avoid threading issues.
-rxqueue = Queue.Queue(32)
+rxqueue = Queue(32)
 
 MAX_INPUTS = 4
 
@@ -118,7 +118,7 @@ class TelemetryListener(object):
             
             if m != None:
                 try:
-                    self.handle_packet(m[0])
+                    self.handle_packet(m[0].decode('ascii'))
                 except:
                     traceback.print_exc()
                     print("ERROR: Couldn't handle packet correctly.")
@@ -150,10 +150,10 @@ class TelemetryListener(object):
                     ozisock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
                 except:
                     pass
-                ozisock.sendto(packet,('<broadcast>',self.ozi_port))
+                ozisock.sendto(packet.encode('ascii'),('<broadcast>',self.ozi_port))
             else:
                 # Otherwise, send to a user-defined hostname/port.
-                ozisock.sendto(packet,self.ozi_host)
+                ozisock.sendto(packet.encode('ascii'),self.ozi_host)
 
             ozisock.close()
             return packet
@@ -249,7 +249,7 @@ def read_config(filename="ozimux.cfg"):
     """
     Read in the ozimux config file.
     """
-    config = ConfigParser.ConfigParser()
+    config = RawConfigParser()
     config.read(filename)
 
     config_dict = {}
@@ -419,7 +419,7 @@ except:
         sys.exit(1)
 
 # Extract input names into a list, which we will iterate through.
-input_list = config['inputs'].keys()
+input_list = list(config['inputs'].keys())
 input_list.sort()
 if len(input_list) > MAX_INPUTS:
     input_list = input_list[:MAX_INPUTS]

@@ -15,7 +15,7 @@ class ROTCTLD(object):
     """ rotctld (hamlib) communication class """
     # Note: This is a massive hack. 
 
-    def __init__(self, hostname, port=4533, poll_rate=5, timeout=5, az_180 = False):
+    def __init__(self, hostname, port=4533, poll_rate=5, timeout=10, az_180 = False):
         """ Open a connection to rotctld, and test it for validity """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(timeout)
@@ -28,6 +28,7 @@ class ROTCTLD(object):
         """ Connect to rotctld instance """
         self.sock.connect((self.hostname,self.port))
         model = self.get_model()
+        print(model)
         if model == None:
             # Timeout!
             self.close()
@@ -191,8 +192,16 @@ class PSTRotator(object):
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 
-    rot = PSTRotator()
+    # rot = PSTRotator()
+    # time.sleep(10)
+    # rot.set_azel(45.0,45.0)
+    # time.sleep(10)
+    # rot.close()
+
+    rot = ROTCTLD(hostname="10.0.0.215")
+    rot.connect()
     time.sleep(10)
     rot.set_azel(45.0,45.0)
     time.sleep(10)
+    rot.set_azel(0.0,0.0)
     rot.close()

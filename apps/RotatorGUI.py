@@ -25,13 +25,15 @@ from horuslib.rotators import PSTRotator, ROTCTLD
 from threading import Thread
 from PyQt5 import QtGui, QtCore, QtWidgets
 from datetime import datetime
-import socket,json,sys,Queue,traceback,time,math,ConfigParser,logging
+from queue import Queue
+from configparser import RawConfigParser
+import socket,json,sys,traceback,time,math,logging
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.INFO)
 
 # Read in Config Data
-config = ConfigParser.RawConfigParser()
+config = RawConfigParser()
 config.read("defaults.cfg")
 
 rotator_type = config.get("Rotator", "rotator_type")
@@ -47,7 +49,7 @@ else:
 
 
 # RX Message queue to avoid threading issues.
-rxqueue = Queue.Queue(16)
+rxqueue = Queue(16)
 
 # Me/Payload/Az/El Globals
 PAYLOAD_DATA_VALID = False
@@ -515,7 +517,7 @@ def update_my_stats(packet):
 # Method to process UDP packets.
 def process_udp(udp_packet):
     try:
-        packet_dict = json.loads(udp_packet)
+        packet_dict = json.loads(udp_packet.decode('ascii'))
 
         # TX Confirmation Packet?
         if packet_dict['type'] == 'PAYLOAD_SUMMARY':
