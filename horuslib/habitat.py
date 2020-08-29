@@ -6,8 +6,7 @@
 #   Released under GNU GPL v3 or later
 #
 
-import httplib
-import requests # Because I'm lazy.
+import requests
 import json
 import sys
 import traceback
@@ -21,47 +20,19 @@ def habitat_upload_payload_telemetry(telemetry, payload_callsign = "HORUSLORA", 
 
     sentence = telemetry_to_sentence(telemetry, payload_callsign = payload_callsign, payload_id = telemetry['payload_id'])
 
-    sentence_b64 = b64encode(sentence)
-
-    date = datetime.utcnow().isoformat("T") + "Z"
-
-    data = {
-        "type": "payload_telemetry",
-        "data": {
-            "_raw": sentence_b64
-            },
-        "receivers": {
-            callsign: {
-                "time_created": date,
-                "time_uploaded": date,
-                },
-            },
-    }
-    try:
-        c = httplib.HTTPConnection("habitat.habhub.org",timeout=4)
-        c.request(
-            "PUT",
-            "/habitat/_design/payload_telemetry/_update/add_listener/%s" % sha256(sentence_b64).hexdigest(),
-            json.dumps(data),  # BODY
-            {"Content-Type": "application/json"}  # HEADERS
-            )
-
-        response = c.getresponse()
-        return (True,"OK")
-    except Exception as e:
-        return (False,"Failed to upload to Habitat: %s" % (str(e)))
+    return habitat_upload_sentence(sentence, callsign=callsign)
 
 
 def habitat_upload_sentence(sentence, callsign="N0CALL", timeout=10):
 
-    sentence_b64 = b64encode(sentence)
+    sentence_b64 = b64encode(sentence.encode("ascii"))
 
     date = datetime.utcnow().isoformat("T") + "Z"
 
     data = {
         "type": "payload_telemetry",
         "data": {
-            "_raw": sentence_b64
+            "_raw": sentence_b64.decode('ascii')
             },
         "receivers": {
             callsign: {
@@ -71,15 +42,12 @@ def habitat_upload_sentence(sentence, callsign="N0CALL", timeout=10):
             },
     }
     try:
-        c = httplib.HTTPConnection("habitat.habhub.org",timeout=timeout)
-        c.request(
-            "PUT",
-            "/habitat/_design/payload_telemetry/_update/add_listener/%s" % sha256(sentence_b64).hexdigest(),
-            json.dumps(data),  # BODY
-            {"Content-Type": "application/json"}  # HEADERS
-            )
+        _url = "http://habitat.habhub.org/habitat/_design/payload_telemetry/_update/add_listener/%s" % sha256(sentence_b64).hexdigest()
 
-        response = c.getresponse()
+        _req = requests.put(
+            _url, data=json.dumps(data), timeout=timeout
+        )
+
         return (True,"OK")
     except Exception as e:
         return (False,"Failed to upload to Habitat: %s" % (str(e)))
