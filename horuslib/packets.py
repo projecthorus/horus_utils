@@ -709,7 +709,7 @@ def udp_packet_to_string(udp_packet):
         return "%s Local GPS: %.4f,%.4f %d kph %d m" % (timestamp,udp_packet['latitude'], udp_packet['longitude'], udp_packet['speed'], udp_packet['altitude'])
     elif pkt_type == "PAYLOAD_SUMMARY":
         timestamp = datetime.utcnow().isoformat()
-        return "%s Payload Summary Status: %.5f, %.5f, %d" % (timestamp, udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'])
+        return "%s Payload Summary Status: %s, %.5f, %.5f, %d" % (timestamp, udp_packet['time'], udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'])
     elif pkt_type == "OZIMUX":
         timestamp = datetime.utcnow().isoformat()
         return "%s OziMux Broadcast: Source = %s, Pos: %.5f, %.5f, %d, Comment: %s" % (timestamp, udp_packet['source_name'], udp_packet['latitude'], udp_packet['longitude'], udp_packet['altitude'], udp_packet['comment'])
