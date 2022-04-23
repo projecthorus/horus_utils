@@ -22,12 +22,19 @@
 from horuslib import *
 from horuslib.packets import *
 from horuslib.habitat import *
+from horuslib.sondehubamateur import *
 from threading import Thread
 from datetime import datetime
-import socket,json,sys,argparse,ConfigParser
+import socket,json,sys,argparse,logging
+from configparser import RawConfigParser
 
 udp_broadcast_port = HORUS_UDP_PORT
 udp_listener_running = False
+
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s:%(message)s", level=logging.DEBUG
+)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("callsign", help="Listener Callsign")
@@ -37,13 +44,18 @@ args = parser.parse_args()
 
 # Read in payload callsign from config file.
 try:
-    config = ConfigParser.ConfigParser()
+    config = RawConfigParser()
     config.read('defaults.cfg')
     payload_callsign = config.get('Payload','payload_callsign')
 except:
-    print("Problems reading configuration file, skipping...")
+    logging.error("Problems reading configuration file, skipping...")
     payload_callsign = "HORUSLORA"
 
+
+sondehub = SondehubAmateurUploader(
+    upload_rate = 2,
+    user_callsign = args.callsign
+)
 
 def write_log_entry(packet):
     timestamp = datetime.utcnow().isoformat()
@@ -60,7 +72,7 @@ def write_log_entry(packet):
 
     log = open(args.log_file,'a')
     log_string = "%s,%s,%s,%s" % (timestamp,rssi,snr,sentence)
-    print(log_string)
+    logging.debug(log_string)
     log.write(log_string)
     log.close()
 
@@ -77,6 +89,36 @@ def emit_payload_summary(telemetry, packet):
 
     if (_latitude != 0.0) and (_longitude != 0.0):
         send_payload_summary(_callsign, _latitude, _longitude, _altitude, short_time=_short_time, snr=packet['snr'], comment=_comment, udp_port=args.summary)
+
+
+def upload_sondehub_amateur(telemetry):
+    global payload_callsign, sondehub
+
+    # {'packet_type': 0, 'payload_flags': 0, 'payload_id': 1, 'counter': 333, 'hour': 5, 'minute': 17, 'second': 25, 
+    # 'latitude': -34.72060012817383, 'longitude': 138.69273376464844, 'altitude': 108, 'speed': 0, 'sats': 5, 
+    # 'temp': 0, 'batt_voltage_raw': 177, 'pyro_voltage_raw': 0, 'rxPktCount': 0, 'RSSI': -81, 'uplinkSlots': 0, 
+    #'used_timeslots': 0, 'current_timeslot': 0, 'time': '05:17:25', 'seconds_in_day': 19045, 'batt_voltage': 1.5411764705882354, 
+    #'pyro_voltage': 0.0}
+
+    _callsign = payload_callsign + str(telemetry['payload_id'])
+
+    _telem = {
+        "payload_callsign": _callsign,
+        "frame": telemetry["counter"],
+        "time": telemetry["time"],
+        "lat": telemetry["latitude"],
+        "lon": telemetry["longitude"],
+        "alt": telemetry["altitude"],
+        "batt": telemetry["batt_voltage"],
+        "vel_h": telemetry["speed"]*3.6, # kph -> m/s
+        "custom_field_names": ["pyro_voltage", "rx_pkt_count", "noise_floor_dbm"],
+        "pyro_voltage": telemetry["pyro_voltage"],
+        "rx_pkt_count": telemetry["rxPktCount"],
+        "noise_floor_dbm": telemetry["RSSI"]
+    }
+
+    sondehub.add(_telem)
+
 
 def process_udp(udp_packet):
     try:
@@ -97,18 +139,19 @@ def process_udp(udp_packet):
         # Only process payload telemetry packets.
         if payload_type == HORUS_PACKET_TYPES.PAYLOAD_TELEMETRY:
             telemetry = decode_horus_payload_telemetry(payload)
+            upload_sondehub_amateur(telemetry)
             sentence = telemetry_to_sentence(telemetry, payload_callsign=payload_callsign, payload_id=telemetry['payload_id'])
             if args.summary != -1:
                 emit_payload_summary(telemetry, packet)
             (success,error) = habitat_upload_payload_telemetry(telemetry, payload_callsign=payload_callsign, callsign=args.callsign)
             if success:
-                print("Uploaded Successfuly!")
+                logging.info("Habitat - Uploaded Successfuly!")
             else:
-                print("Upload Failed: %s" % error)
+                logging.error("Habitat - Upload Failed: %s" % error)
         else:
             return
     except Exception as e:
-        print("Invalid packet, or decode failed: %s" % e)
+        logging.error("Invalid packet, or decode failed: %s" % e)
 
 def udp_rx_thread():
     global udp_listener_running
@@ -121,7 +164,7 @@ def udp_rx_thread():
     except:
         pass
     s.bind(('',HORUS_UDP_PORT))
-    print("Started UDP Listener Thread.")
+    logging.info("Started UDP Listener Thread.")
     udp_listener_running = True
     while udp_listener_running:
         try:
@@ -132,10 +175,12 @@ def udp_rx_thread():
         if m != None:
                 process_udp(m[0])
     
-    print("Closing UDP Listener")
+    logging.info("Closing UDP Listener")
     s.close()
 
 try:
     udp_rx_thread()
 except KeyboardInterrupt:
-    print("Closing.")
+    sondehub.close()
+    udp_listener_running = False
+    logging.info("Closing.")
