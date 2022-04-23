@@ -8,6 +8,7 @@
 import struct
 import traceback
 from datetime import datetime, timedelta
+import logging
 import crcmod
 import json
 from hashlib import sha256
@@ -52,21 +53,33 @@ def wenet_packet_to_string(packet):
         return "Unknown Wenet Packet Type: %d" % packet_type
 
 
-
 #
 # SSDV - Packets as per https://ukhas.org.uk/guides:ssdv
 #
 
 _ssdv_callsign_alphabet = '-0123456789---ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 def ssdv_decode_callsign(code):
-    code = str(bytearray(code))
+    """ Decode a SSDV callsign from a supplied array of ints,
+        extract from a SSDV packet.
+
+        Args:
+            list: List of integers, corresponding to bytes 2-6 of a SSDV packet.
+
+        Returns:
+            str: Decoded callsign.
+
+    """
+
+    code = bytes(bytearray(code))
     code = struct.unpack('>I',code)[0]
     callsign = ''
+
     while code:
         callsign += _ssdv_callsign_alphabet[code % 40]
-        code /= 40
+        code = code // 40
     
     return callsign
+
 
 def ssdv_packet_info(packet):
     """ Extract various information out of a SSDV packet, and present as a dict. """
@@ -95,6 +108,7 @@ def ssdv_packet_info(packet):
         traceback.print_exc()
         return {'error': "ERROR: %s" % str(e)}
 
+
 def ssdv_packet_string(packet):
     """ Produce a textual representation of a SSDV packet. """
     packet_info = ssdv_packet_info(packet)
@@ -109,15 +123,16 @@ def ssdv_packet_string(packet):
 def decode_text_message(packet):
     """ Extract information from a text message packet """
     # We need the packet as a string, convert to a string in case we were passed a list of bytes.
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
     message = {}
     try:
-        message['len'] = struct.unpack("B",packet[1])[0]
+        message['len'] = struct.unpack("B",packet[1:2])[0]
         message['id'] = struct.unpack(">H",packet[2:4])[0]
-        message['text'] = packet[4:4+message['len']]
+        message['text'] = packet[4:4+message['len']].decode('ascii')
         message['error'] = 'None'
     except:
-        return {'error': 'Could not decode wenet message packet.'}
+        traceback.print_exc()
+        return {'error': 'Could not decode message packet.'}
 
     return message
 
@@ -125,9 +140,9 @@ def text_message_string(packet):
     message = decode_text_message(packet)
 
     if message['error'] != 'None':
-        return "Wenet Text: ERROR Could not decode."
+        return "Text: ERROR Could not decode."
     else:
-        return "Wenet Text #%d: \t%s" % (message['id'],message['text'])
+        return "Text Message #%d: \t%s" % (message['id'],message['text'])
 
 #
 # GPS Telemetry Decoder
@@ -139,9 +154,9 @@ def text_message_string(packet):
 
 def gps_weeksecondstoutc(gpsweek, gpsseconds, leapseconds):
     """ Convert time in GPS time (GPS Week, seconds-of-week) to a UTC timestamp """
-    epoch = datetime.strptime("1980-01-06 00:00:00","%Y-%m-%d %H:%M:%S")
-    elapsed = timedelta(days=(gpsweek*7),seconds=(gpsseconds))
-    timestamp = epoch + elapsed - timedelta(seconds=leapseconds)
+    epoch = datetime.datetime.strptime("1980-01-06 00:00:00","%Y-%m-%d %H:%M:%S")
+    elapsed = datetime.timedelta(days=(gpsweek*7),seconds=(gpsseconds))
+    timestamp = epoch + elapsed - datetime.timedelta(seconds=leapseconds)
     return timestamp.isoformat()
 
 
@@ -163,7 +178,7 @@ def gps_telemetry_decoder(packet):
 
     # We need the packet as a string - convert to a string in case we were passed a list of bytes,
     # which occurs when we are decoding a packet that has arrived via a UDP-broadcast JSON blob.
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
     gps_data = {}
 
     # Some basic sanity checking of the packet before we attempt to decode.
@@ -250,9 +265,9 @@ def gps_telemetry_string(packet):
 
     # Check if there was a decode error. If not, produce a string.
     if gps_data['error'] != 'None':
-        return "Wenet GPS: ERROR Could not decode."
+        return "GPS: ERROR Could not decode."
     else:
-        gps_data_string = "Wenet GPS: %s Lat/Lon: %.5f,%.5f Alt: %dm, Speed: H %dkph V %.1fm/s, Heading: %d deg, Fix: %s, SVs: %d, Model: %s " % (
+        gps_data_string = "GPS: %s Lat/Lon: %.5f,%.5f Alt: %dm, Speed: H %dkph V %.1fm/s, Heading: %d deg, Fix: %s, SVs: %d, Model: %s " % (
             gps_data['timestamp'],
             gps_data['latitude'],
             gps_data['longitude'],
@@ -288,7 +303,7 @@ def orientation_telemetry_decoder(packet):
 
     # We need the packet as a string - convert to a string in case we were passed a list of bytes,
     # which occurs when we are decoding a packet that has arrived via a UDP-broadcast JSON blob.
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
 
     # Some basic sanity checking of the packet before we attempt to decode.
     if len(packet) < WENET_PACKET_LENGTHS.ORIENTATION_TELEMETRY:
@@ -391,7 +406,7 @@ def image_telemetry_decoder(packet):
 
     # We need the packet as a string - convert to a string in case we were passed a list of bytes,
     # which occurs when we are decoding a packet that has arrived via a UDP-broadcast JSON blob.
-    packet = str(bytearray(packet))
+    packet = bytes(bytearray(packet))
 
     image_data = {}
 
@@ -518,3 +533,41 @@ def image_telemetry_string(packet):
             )
 
         return image_data_string
+
+
+def sec_payload_decode(packet):
+    """ Split a secondary payload packet into fields """
+    # We need the packet as a string, convert to a string in case we were passed a list of bytes.
+    packet = bytes(bytearray(packet))
+    message = {}
+    try:
+        #message['id'] = struct.unpack("B",packet[1:2])[0]
+        message['id'] = packet[1]
+        message['payload'] = packet[2:]
+    except:
+        return {'error': 'Could not decode secondary payload packet.'}
+
+    return message
+
+
+def sec_payload_packet_string(packet):
+    """ Provide a string representation of a secondary payload packet. """
+
+    _sec_payload = sec_payload_decode(packet)
+
+    # Check if we could split the packet into its expected contents.
+    if 'error' in _sec_payload:
+        return "Secondary Payload Packet: Error - Could not Decode."
+
+    _sec_payload_str = "Secondary Payload Packet (ID: #%d) - " % _sec_payload['id']
+
+    if decode_packet_type(_sec_payload['payload']) == WENET_PACKET_TYPES.TEXT_MESSAGE:
+        # Secondary payload contains a Text Message
+        _message = text_message_string(_sec_payload['payload'])
+        return _sec_payload_str + _message
+
+    else:
+        # Unknown Packet type.
+        _payload_type = decode_packet_type(_sec_payload['payload'])
+
+        return _sec_payload_str + "Payload Type %d" % _payload_type
