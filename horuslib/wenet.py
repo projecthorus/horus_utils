@@ -7,7 +7,7 @@
 #
 import struct
 import traceback
-from datetime import datetime, timedelta
+import datetime
 import logging
 import crcmod
 import json
