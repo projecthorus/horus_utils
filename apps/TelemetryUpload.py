@@ -33,7 +33,7 @@ udp_listener_running = False
 
 
 logging.basicConfig(
-    format="%(asctime)s %(levelname)s:%(message)s", level=logging.DEBUG
+    format="%(asctime)s %(levelname)s:%(message)s", level=logging.INFO
 )
 
 parser = argparse.ArgumentParser()
