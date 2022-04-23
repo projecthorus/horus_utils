@@ -33,7 +33,7 @@ udp_listener_running = False
 
 
 logging.basicConfig(
-    format="%(asctime)s %(levelname)s:%(message)s", level=logging.INFO
+    format="%(asctime)s %(levelname)s:%(message)s", level=logging.DEBUG
 )
 
 parser = argparse.ArgumentParser()
@@ -91,7 +91,7 @@ def emit_payload_summary(telemetry, packet):
         send_payload_summary(_callsign, _latitude, _longitude, _altitude, short_time=_short_time, snr=packet['snr'], comment=_comment, udp_port=args.summary)
 
 
-def upload_sondehub_amateur(telemetry):
+def upload_sondehub_amateur(telemetry, packet):
     global payload_callsign, sondehub
 
     # {'packet_type': 0, 'payload_flags': 0, 'payload_id': 1, 'counter': 333, 'hour': 5, 'minute': 17, 'second': 25, 
@@ -114,7 +114,9 @@ def upload_sondehub_amateur(telemetry):
         "custom_field_names": ["pyro_voltage", "rx_pkt_count", "noise_floor_dbm"],
         "pyro_voltage": telemetry["pyro_voltage"],
         "rx_pkt_count": telemetry["rxPktCount"],
-        "noise_floor_dbm": telemetry["RSSI"]
+        "noise_floor_dbm": telemetry["RSSI"],
+        "rssi": packet["rssi"],
+        "snr": packet["snr"]
     }
 
     sondehub.add(_telem)
@@ -139,7 +141,7 @@ def process_udp(udp_packet):
         # Only process payload telemetry packets.
         if payload_type == HORUS_PACKET_TYPES.PAYLOAD_TELEMETRY:
             telemetry = decode_horus_payload_telemetry(payload)
-            upload_sondehub_amateur(telemetry)
+            upload_sondehub_amateur(telemetry, packet)
             sentence = telemetry_to_sentence(telemetry, payload_callsign=payload_callsign, payload_id=telemetry['payload_id'])
             if args.summary != -1:
                 emit_payload_summary(telemetry, packet)

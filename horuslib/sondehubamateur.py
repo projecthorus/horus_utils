@@ -248,6 +248,9 @@ class SondehubAmateurUploader(object):
         if "snr" in telemetry:
             _output["snr"] = telemetry["snr"]
 
+        if "rssi" in telemetry:
+            _output["rssi"] = telemetry["rssi"]
+
         if "f_centre" in telemetry:
             _output["frequency"] = telemetry["f_centre"] / 1e6 # Hz -> MHz
 
