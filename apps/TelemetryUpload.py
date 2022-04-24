@@ -116,7 +116,8 @@ def upload_sondehub_amateur(telemetry, packet):
         "rx_pkt_count": telemetry["rxPktCount"],
         "noise_floor_dbm": telemetry["RSSI"],
         "rssi": packet["rssi"],
-        "snr": packet["snr"]
+        "snr": packet["snr"],
+        "modulation": "LoRa (Horus)"
     }
 
     sondehub.add(_telem)
