@@ -9,7 +9,6 @@
 #   Copyright (C) 2022  Mark Jessop <vk5qi@rfhead.net>
 #   Released under GNU GPL v3 or later
 #
-import datetime
 import glob
 import gzip
 import json
@@ -20,6 +19,7 @@ import time
 from threading import Thread
 from email.utils import formatdate
 from dateutil.parser import parse
+from datetime import datetime, timedelta
 
 try:
     # Python 2
@@ -35,7 +35,7 @@ def fix_datetime(datetime_str, local_dt_str=None):
 	"""
 
     if local_dt_str is None:
-        _now = datetime.datetime.utcnow()
+        _now = datetime.utcnow()
     else:
         _now = parse(local_dt_str)
 
@@ -56,11 +56,11 @@ def fix_datetime(datetime_str, local_dt_str=None):
         # We are within the window, and need to adjust the day backwards or forwards based on the sonde time.
         if _imet_dt.hour == 23 and _now.hour == 0:
             # Assume system clock running slightly fast, and subtract a day from the telemetry date.
-            _imet_dt = _imet_dt - datetime.timedelta(days=1)
+            _imet_dt = _imet_dt - timedelta(days=1)
 
         elif _imet_dt.hour == 00 and _now.hour == 23:
             # System clock running slow. Add a day.
-            _imet_dt = _imet_dt + datetime.timedelta(days=1)
+            _imet_dt = _imet_dt + timedelta(days=1)
 
         return _imet_dt
 
@@ -181,7 +181,7 @@ class SondehubAmateurUploader(object):
             "uploader_position": self.user_position,
             "uploader_radio": self.user_radio,
             "uploader_antenna": self.user_antenna,
-            "time_received": datetime.datetime.utcnow().strftime(
+            "time_received": datetime.utcnow().strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             ),
         }

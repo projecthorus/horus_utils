@@ -9,9 +9,9 @@ from .oziplotter import *
 from .packets import send_payload_summary
 import sys
 import time
-import datetime
 import traceback
 from dateutil.parser import *
+from datetime import datetime, timedelta
 
 def read_telemetry_csv(filename,
     datetime_field = 0,
@@ -84,7 +84,7 @@ def emulate_telemetry(telemetry_array,
     _first_line = telemetry_array[0]
 
     _telemetry_datetime = _first_line[0]
-    _current_datetime = datetime.datetime.utcnow()
+    _current_datetime = datetime.utcnow()
     _current_latitude = _first_line[1]
     _current_longitude =_first_line[2]
     _current_altitude = _first_line[3]

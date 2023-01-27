@@ -7,12 +7,12 @@
 #
 import struct
 import traceback
-import datetime
 import logging
 import crcmod
 import json
 from hashlib import sha256
 from base64 import b64encode
+from datetime import datetime, timedelta
 
 WENET_IMAGE_UDP_PORT        = 7890
 WENET_TELEMETRY_UDP_PORT    = 7891
@@ -154,9 +154,9 @@ def text_message_string(packet):
 
 def gps_weeksecondstoutc(gpsweek, gpsseconds, leapseconds):
     """ Convert time in GPS time (GPS Week, seconds-of-week) to a UTC timestamp """
-    epoch = datetime.datetime.strptime("1980-01-06 00:00:00","%Y-%m-%d %H:%M:%S")
-    elapsed = datetime.timedelta(days=(gpsweek*7),seconds=(gpsseconds))
-    timestamp = epoch + elapsed - datetime.timedelta(seconds=leapseconds)
+    epoch = datetime.strptime("1980-01-06 00:00:00","%Y-%m-%d %H:%M:%S")
+    elapsed = timedelta(days=(gpsweek*7),seconds=(gpsseconds))
+    timestamp = epoch + elapsed - timedelta(seconds=leapseconds)
     return timestamp.isoformat()
 
 
