@@ -1,0 +1,15 @@
+[Unit]
+Description=horus_lora_uploader
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart=/home/pi/horus_utils/apps/start_horus_lora_uploader.sh
+Restart=always
+RestartSec=120
+WorkingDirectory=/home/pi/horus_utils/apps/
+User=pi
+SyslogIdentifier=horus_lora_uploader
+
+[Install]
+WantedBy=multi-user.target

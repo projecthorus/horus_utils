@@ -128,11 +128,12 @@
 #
 #
 
-import json,socket,Queue,random, argparse, sys, traceback, time, random
+import json,socket,random, argparse, sys, traceback, time, random
 from threading import Thread
 from horuslib import *
 from horuslib.packets import *
 from datetime import datetime
+from queue import Queue
 
 from SX127x.LoRa import *
 
@@ -148,8 +149,8 @@ class LoRaTxRxCont(LoRa):
         self.max_payload = max_payload
         self.udp_broadcast_port = HORUS_UDP_PORT
 
-        self.udprxqueue = Queue.Queue(128) # Queue for incoming UDP packets to be processed.
-        self.txqueue = Queue.Queue(TX_QUEUE_SIZE)
+        self.udprxqueue = Queue(128) # Queue for incoming UDP packets to be processed.
+        self.txqueue = Queue(TX_QUEUE_SIZE)
         self.udp_listener_running = False
 
         self.status_counter = 0
@@ -157,12 +158,12 @@ class LoRaTxRxCont(LoRa):
 
         # TX-after-RX Queue. I with python queues had a peek method... 
         # Data stored into this queue is of the form (payload,destination_id)
-        self.tx_after_rx = Queue.Queue(1)
+        self.tx_after_rx = Queue(1)
         self.default_tx_timeout = 15
 
         # Settings change queue, as we need to do these changes in the main processing loop, not the UDP processing thread.
         # These will just be (key,value) tuples to change some basic LoRa settings via UDP commands.
-        self.settings_changes = Queue.Queue(10)
+        self.settings_changes = Queue(10)
 
         # Low Priority Packet related variables
         # This data is sent whenever the relevant payload indicates that is is 'our' time to transmit.
@@ -225,9 +226,9 @@ class LoRaTxRxCont(LoRa):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST, 1)
         try:
-            s.sendto(json.dumps(data), ('<broadcast>', self.udp_broadcast_port))
+            s.sendto(json.dumps(data).encode(), ('<broadcast>', self.udp_broadcast_port))
         except socket.error:
-            s.sendto(json.dumps(data), ('127.0.0.1', self.udp_broadcast_port))
+            s.sendto(json.dumps(data).encode(), ('127.0.0.1', self.udp_broadcast_port))
         s.close()
 
     def udp_send_rx(self,payload,snr,rssi,pkt_flags,freq_error):
@@ -474,7 +475,7 @@ class LoRaTxRxCont(LoRa):
                 pass
             else:
                 try:
-                    m_data = json.loads(udp_datagram)
+                    m_data = json.loads(udp_datagram.decode())
                     # Packet to be transmitted.
                     if m_data['type'] == 'TXPKT':
                         # Switch based on if we have a 'destination' field.

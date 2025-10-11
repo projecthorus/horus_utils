@@ -125,7 +125,7 @@ def upload_sondehub_amateur(telemetry, packet):
 
 def process_udp(udp_packet):
     try:
-        packet = json.loads(udp_packet)
+        packet = json.loads(udp_packet.decode())
         # Only process received telemetry packets.
         if packet['type'] != "RXPKT":
             return
