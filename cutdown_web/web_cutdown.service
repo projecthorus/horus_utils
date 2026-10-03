@@ -1,0 +1,15 @@
+[Unit]
+Description=web_cutdown
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart=/home/pi/horus_utils/cutdown_web/venv/bin/python /home/pi/horus_utils/cutdown_web/app.py --password abc
+Restart=always
+RestartSec=120
+WorkingDirectory=/home/pi/horus_utils/cutdown_web/
+User=pi
+SyslogIdentifier=web_cutdown
+
+[Install]
+WantedBy=multi-user.target

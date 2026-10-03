@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Horus Ground Station</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div><div class="eyebrow">PROJECT HORUS</div><h1>Cutdown Payload Control</h1></div>
+    <div id="connection" class="connection offline" role="status">Connecting…</div>
+  </header>
+
+  <main class="layout">
+    <aside class="card sidebar">
+      <div class="card-heading"><h2>Heard payloads</h2><span id="payload-count" class="badge">0</span></div>
+      <p class="hint">Select a payload to view its packets and send commands.</p>
+      <div id="payload-list" class="payload-list" aria-label="Heard payload IDs">
+        <p class="empty">Waiting for valid radio packets…</p>
+      </div>
+      <div class="selected-label">SELECTED PAYLOAD</div>
+      <div id="selected-id" class="selected-id">—</div>
+    </aside>
+
+    <section class="main-column">
+      <div class="cards-two">
+        <section class="card"><div class="card-heading"><h2>Radio gateway</h2><span class="tag">UDP 55672</span></div>
+          <dl class="metrics">
+            <div><dt>Last status</dt><dd id="radio-time">—</dd></div>
+            <div><dt>Frequency</dt><dd id="radio-frequency">—</dd></div>
+            <div><dt>Noise floor</dt><dd id="radio-rssi">—</dd></div>
+            <div><dt>TX queue</dt><dd id="radio-queue">—</dd></div>
+          </dl>
+        </section>
+        <section class="card"><div class="card-heading"><h2>Last received packet</h2><span id="packet-crc" class="tag">—</span></div>
+          <dl class="metrics">
+            <div><dt>Time</dt><dd id="packet-time">—</dd></div>
+            <div><dt>Payload ID</dt><dd id="packet-id">—</dd></div>
+            <div><dt>Type</dt><dd id="packet-type">—</dd></div>
+            <div><dt>RSSI / SNR</dt><dd id="packet-signal">—</dd></div>
+            <div><dt>Frequency error</dt><dd id="packet-error">—</dd></div>
+            <div><dt>Length / repeated</dt><dd id="packet-detail">—</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <div class="cards-two">
+        <section class="card"><div class="card-heading"><h2>Payload position</h2><span id="telemetry-kind" class="tag">—</span></div>
+          <dl class="metrics">
+            <div><dt>Payload time</dt><dd id="position-time">—</dd></div>
+            <div><dt>Latitude</dt><dd id="position-lat">—</dd></div>
+            <div><dt>Longitude</dt><dd id="position-lon">—</dd></div>
+            <div><dt>Altitude</dt><dd id="position-alt">—</dd></div>
+            <div><dt>Speed</dt><dd id="position-speed">—</dd></div>
+            <div><dt>Satellites</dt><dd id="position-sats">—</dd></div>
+          </dl>
+        </section>
+        <section class="card"><div class="card-heading"><h2>Payload telemetry</h2></div>
+          <dl class="metrics">
+            <div><dt>Packet counter</dt><dd id="telem-counter">—</dd></div>
+            <div><dt>Battery</dt><dd id="telem-battery">—</dd></div>
+            <div><dt>Pyro voltage</dt><dd id="telem-pyro">—</dd></div>
+            <div><dt>Temperature</dt><dd id="telem-temp">—</dd></div>
+            <div><dt>Packets received</dt><dd id="telem-received">—</dd></div>
+            <div><dt>Payload noise floor</dt><dd id="telem-noise">—</dd></div>
+            <div><dt>Uplink slot</dt><dd id="telem-slot">—</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="card command-card">
+        <div class="card-heading"><h2>Uplink command</h2><span class="tag caution">RADIO TRANSMIT</span></div>
+        <p class="hint">Commands are queued by the radio gateway after the selected payload is heard. A request is not an acknowledgement.</p>
+        <form id="command-form" autocomplete="off">
+          <label>Command<select id="command" name="command"><option value="ping">Ping</option><option value="cutdown">Cutdown</option></select></label>
+          <label><span id="value-label">Ping value (0–255)</span><input id="command-value" name="value" type="number" min="0" max="255" step="1" value="0" required></label>
+          <label>Uplink password<input id="uplink-code" name="uplink-code" type="text" minlength="3" maxlength="3" required autocomplete="off" spellcheck="false" value="{{ uplink_password }}" placeholder="3 characters"></label>
+          <button id="send-button" type="submit" disabled>Send Ping</button>
+        </form>
+        <p id="command-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+
+      <div class="cards-two bottom-cards">
+        <section class="card"><div class="card-heading"><h2>Uplink responses</h2><span class="tag">Selected payload</span></div>
+          <ol id="uplink-list" class="event-list"><li class="empty">No uplink activity yet.</li></ol>
+        </section>
+        <section class="card"><div class="card-heading"><h2>Status log</h2><span class="tag">Recent activity</span></div>
+          <ol id="status-list" class="event-list"><li class="empty">Waiting for UDP messages…</li></ol>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
